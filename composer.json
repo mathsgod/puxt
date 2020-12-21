@@ -1,0 +1,20 @@
+{
+    "name": "mathsgod/puxt",
+    "type": "framework",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Raymond Chong",
+            "email": "mathsgod@yahoo.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "PUXT\\": "src"
+        }
+    },
+    "require": {
+        "twig/twig": "^2.12",
+        "mathsgod/php-psr7": "^1.0"
+    }
+}

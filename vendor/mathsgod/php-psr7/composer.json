@@ -1,0 +1,30 @@
+{
+    "name": "mathsgod/php-psr7",
+    "description": "A standard implementation of php psr7",
+    "type": "library",
+    "require": {
+        "php": ">=7.0",
+        "psr/http-message": "^1.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^6.5"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Raymond Chong",
+            "email": "mathsgod@yahoo.com"
+        }
+    ],
+    "scripts": {
+        "test": "phpunit tests"
+    },
+    "autoload": {
+        "psr-4": {
+            "PHP\\Psr7\\": "src/"
+        },
+        "files": [
+            "function/function.php"
+        ]
+    }
+}

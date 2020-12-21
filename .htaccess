@@ -1,0 +1,12 @@
+<IfModule mod_fcgid.c>
+RewriteEngine on
+RewriteRule .* - [env=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+</IfModule>
+
+<IfModule mod_rewrite.c>
+RewriteEngine on
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteBase /puxt/
+RewriteRule ^(.*)$ index.php [L,QSA]
+</IfModule>
