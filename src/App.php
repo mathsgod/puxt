@@ -20,8 +20,6 @@ class App
         $this->twig = new \Twig\Environment($loader);
     }
 
-
-
     public function run()
     {
         //base path
@@ -36,7 +34,17 @@ class App
 
         $request_path = substr($path, strlen($this->base_path));
 
+        if ($request_path == "") {
+            $request_path = "index";
+        }
+
         $loader = new Loader("pages/" . $request_path, $this);
+
+        if ($this->request->getMethod() == "POST") {
+
+            $ret = $loader->post($this->request->getParsedBody());
+            die();
+        }
 
         $page = $loader->render();
 
