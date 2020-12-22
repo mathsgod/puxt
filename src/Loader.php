@@ -3,15 +3,18 @@
 namespace PUXT;
 
 use Closure;
+use ReflectionFunction;
 use stdClass;
 
 class Loader
 {
     public $path;
-    public function __construct(string $path, $app)
+    public  $route;
+    public function __construct(string $path, $app, $route)
     {
         $this->path = $path;
         $this->app = $app;
+        $this->route = $route;
     }
 
     public function post(array $body = [])
@@ -41,6 +44,7 @@ class Loader
     public function render(array $data = [])
     {
         $context = new Context();
+        $context->_route = $this->route;
 
         $twig_content = "";
         $ret = $data;
@@ -52,8 +56,9 @@ class Loader
             ob_end_clean();
 
             if ($php["data"]) {
-                $ret["data"] = $php["data"]->call($this);
+                $ret["data"] = $this->exec($php["data"], $this);
             }
+
             foreach ($ret["data"] as $k => $v) {
                 $context->$k = $v;
             }
@@ -65,8 +70,21 @@ class Loader
             }
 
             //created
-            if ($php["created"]) {
-                $php["created"]->call($context);
+            $created = $php["created"];
+            if ($created instanceof Closure) {
+                $reflection_function = new ReflectionFunction($created);
+
+                $parameters = [];
+                foreach ($reflection_function->getParameters() as $ref_par) {
+                    if ($ref_par->name == "params") {
+                        $parameters[] = $context->_route->params;
+                    } else {
+                        $parameters[] = null;
+                    }
+                }
+
+
+                $created->call($context, ...$parameters);
             }
 
             if ($php["layout"]) {

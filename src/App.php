@@ -3,6 +3,7 @@
 namespace PUXT;
 
 use PHP\Psr7\ServerRequest;
+use stdClass;
 
 class App
 {
@@ -38,7 +39,34 @@ class App
             $request_path = "index";
         }
 
-        $loader = new Loader("pages/" . $request_path, $this);
+        $data = [
+            "layout" => "default"
+        ];
+
+
+        $route = new Route();
+        $route->path = $request_path;
+        $route->params =  new stdClass;
+
+        if (count(glob($this->root . "/pages/" . $request_path . ".*")) == 0) {
+
+            $e = explode("/", $request_path);
+            $params_value = array_pop($e);
+            $request_path = implode("/", $e);
+            if (count($files = glob($this->root . "/pages/" . $request_path . "/_*.*")) == 0) {
+            } else {
+                //$basename=basename($file[0]);
+                $file = pathinfo($files[0], PATHINFO_FILENAME);
+                $ext = pathinfo($files[0], PATHINFO_EXTENSION);
+
+                $name = substr($file, 1);
+                $route->params->$name = $params_value;
+                $request_path = $request_path . "/$file";
+
+            }
+        }
+
+        $loader = new Loader("pages/" . $request_path, $this, $route);
 
         if ($this->request->getMethod() == "POST") {
 
@@ -46,9 +74,9 @@ class App
             die();
         }
 
-        $page = $loader->render(["layout" => "default"]);
+        $page = $loader->render($data);
         //page layout
-        $layout_loader = new Loader("layouts/" . $page["layout"], $this);
+        $layout_loader = new Loader("layouts/" . $page["layout"], $this, $route);
         $layout = $layout_loader->render($page);
 
         $app_template = $this->twig->load("app.twig");
