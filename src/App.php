@@ -46,20 +46,31 @@ class App
             die();
         }
 
-        $page = $loader->render();
-
-
+        $page = $loader->render(["layout" => "default"]);
         //page layout
-
         $layout_loader = new Loader("layouts/" . $page["layout"], $this);
-        $layout = $layout_loader->render($page["html"]);
-
+        $layout = $layout_loader->render($page);
 
         $app_template = $this->twig->load("app.twig");
 
 
-        $app_html = $app_template->render(["app" => $layout["html"]]);
+        $data = [];
+        $data["app"] = $layout["puxt"];
+
+        $data["head"] = $this->generateHeader($layout["head"]);
+
+        $app_html = $app_template->render($data);
 
         echo $app_html;
+    }
+
+    private function generateHeader(array $head)
+    {
+        $html = [];
+        if ($head["title"]) {
+            $html[] = "<title>" . htmlentities($head['title']) . "</title>";
+        }
+
+        return implode("\n", $html);
     }
 }

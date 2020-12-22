@@ -2,6 +2,9 @@
 
 namespace PUXT;
 
+use Closure;
+use stdClass;
+
 class Loader
 {
     public $path;
@@ -26,14 +29,21 @@ class Loader
         }
     }
 
-    public function render($puxt = null)
+    private function exec($stub, $context = null)
     {
-        $ret = [
-            "layout" => "default"
-        ];
+        if ($stub instanceof Closure) {
+            return $stub->call($context);
+        }
 
-        $data = [];
+        return $stub;
+    }
+
+    public function render(array $data = [])
+    {
+        $context = new Context();
+
         $twig_content = "";
+        $ret = $data;
         if (file_exists($this->path . ".php")) {
 
             ob_start();
@@ -42,21 +52,38 @@ class Loader
             ob_end_clean();
 
             if ($php["data"]) {
-                $data = $php["data"]->call($this);
+                $ret["data"] = $php["data"]->call($this);
+            }
+            foreach ($ret["data"] as $k => $v) {
+                $context->$k = $v;
+            }
+
+            if ($php["methods"]) {
+                foreach ($php["methods"] as $name => $method) {
+                    $context->_methods[$name] = Closure::bind($method, $context, Context::class);
+                }
+            }
+
+            //created
+            if ($php["created"]) {
+                $php["created"]->call($context);
             }
 
             if ($php["layout"]) {
                 $ret["layout"] = $php["layout"];
             }
+
+
+            $ret["head"] = $this->exec($php["head"], $context) ?? [];
+            $ret["head"] = array_merge($data["head"] ?? [], $ret["head"]);
         }
 
-        if ($puxt) {
-            $data["puxt"] = $puxt;
-        }
+        $ret["data"] = (array)$context;
+        $ret["data"]["puxt"] = $data["puxt"];
 
         if (file_exists($this->path . ".twig")) {
             $twig = $this->app->twig->load($this->path . ".twig");
-            $ret["html"] = $twig->render($data);
+            $ret["puxt"] = $twig->render($ret["data"]);
         } else {
 
             $twig_loader = new \Twig\Loader\ArrayLoader([
@@ -64,7 +91,7 @@ class Loader
             ]);
             $twig = new \Twig\Environment($twig_loader);
 
-            $ret["html"] = $twig->render("page", $data);
+            $ret["puxt"] = $twig->render("page", $ret["data"]);
         }
 
         return $ret;

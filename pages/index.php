@@ -6,13 +6,30 @@
 <?php
 
 return [
+    "head" => function () {
+        return [
+            "title" => $this->first_name . " " . $this->getLastName()
+        ];
+    },
+    "data" => function () {
+        return [
+            "first_name" => "raymond",
+            "last_name" => "chong"
+        ];
+    },
+    "created" => function () {
+        //created
+        $this->first_name = "hello";
+        $this->last_name = "world";
+    },
     "post" => function ($post) {
         print_r($post);
     },
-    "data" => function () {
+    "methods" => [
+        "getLastName" => function () {
+            return $this->last_name;
+        }
+    ]
 
-        return [
-            "first_name" => "raymond"
-        ];
-    }
+
 ];
