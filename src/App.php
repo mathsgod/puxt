@@ -48,26 +48,44 @@ class App
         $route->path = $request_path;
         $route->params =  new stdClass;
 
+
         if (count(glob($this->root . "/pages/" . $request_path . ".*")) == 0) {
 
-            $e = explode("/", $request_path);
-            $params_value = array_pop($e);
-            $request_path = implode("/", $e);
+            $params_value = [];
+            do {
 
-            print_R(glob($this->root . "/pages/client/1/_*.*"));
-            print_R(glob($this->root . "/pages/client/_*/view.*"));
-            print_R(glob($this->root . "/pages/_*/1/view.*"));
-            die();
-            if (count($files = glob($this->root . "/pages/" . $request_path . "/_*.*")) == 0) {
-            } else {
-                $file = pathinfo($files[0], PATHINFO_FILENAME);
-                $ext = pathinfo($files[0], PATHINFO_EXTENSION);
+                $e = explode("/", $request_path);
 
-                $name = substr($file, 1);
-                $route->params->$name = $params_value;
-                $request_path = $request_path . "/$file";
-            }
+                $p = array_pop($e);
+                $request_path = implode("/", $e);
+
+
+                $test_path = $this->root . "/pages/" . $request_path . "/_*" . (count($params_value) ? "/" : "") . implode("/", $params_value);
+                array_unshift($params_value, $p);
+
+                if (count($files = glob($test_path . ".*"))) {
+                    $file = $files[0];
+
+                    $ext = pathinfo($file, PATHINFO_EXTENSION);
+                    $file = substr($file, 0, -strlen($ext) - 1);
+
+                    $s = explode("_*", $test_path);
+                    $f = substr($file, strlen($s[0]));
+
+                    $g = explode($s[1], $f);
+
+                    $name = substr($g[0], 1);
+
+                    $route->params->$name = $params_value[0];
+
+                    $request_path = substr($files[0], strlen($this->root . "/pages/"));
+                    $ext = pathinfo($request_path, PATHINFO_EXTENSION);
+                    $request_path = substr($request_path, 0, -strlen($ext) - 1);
+                    break;
+                }
+            } while ($request_path);
         }
+
 
         $loader = new Loader("pages/" . $request_path, $this, $route);
 
