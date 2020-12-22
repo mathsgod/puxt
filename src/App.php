@@ -53,16 +53,19 @@ class App
             $e = explode("/", $request_path);
             $params_value = array_pop($e);
             $request_path = implode("/", $e);
+
+            print_R(glob($this->root . "/pages/client/1/_*.*"));
+            print_R(glob($this->root . "/pages/client/_*/view.*"));
+            print_R(glob($this->root . "/pages/_*/1/view.*"));
+            die();
             if (count($files = glob($this->root . "/pages/" . $request_path . "/_*.*")) == 0) {
             } else {
-                //$basename=basename($file[0]);
                 $file = pathinfo($files[0], PATHINFO_FILENAME);
                 $ext = pathinfo($files[0], PATHINFO_EXTENSION);
 
                 $name = substr($file, 1);
                 $route->params->$name = $params_value;
                 $request_path = $request_path . "/$file";
-
             }
         }
 
