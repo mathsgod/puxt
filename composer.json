@@ -1,4 +1,10 @@
 {
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://raymond2.hostlink.com.hk/satis/web"
+        }
+    ],
     "name": "mathsgod/puxt",
     "type": "framework",
     "license": "MIT",
@@ -15,6 +21,7 @@
     },
     "require": {
         "twig/twig": "^2.12",
-        "mathsgod/php-psr7": "^1.0"
+        "mathsgod/php-psr7": "^1.0",
+        "mathsgod/html": "^1.0"
     }
 }

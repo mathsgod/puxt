@@ -9,13 +9,75 @@ use stdClass;
 class Loader
 {
     public $path;
-    public  $route;
-    public function __construct(string $path, $app, $route)
+    public $route;
+    public $context;
+
+    public $stub;
+    public $twig_content;
+    public $data = [];
+    public $layout;
+    public $view;
+
+    public function __construct(string $path, $app, $route, $head = [])
     {
         $this->path = $path;
         $this->app = $app;
         $this->route = $route;
+
+        $context = new Context;
+        $context->app = $app;
+        $context->route = $route;
+        $context->params = $route->params;
+        $this->context = $context;
+
+
+        $this->view = new View();
+        $this->_route = $this->route;
+
+        if (file_exists($file = $this->path . ".php")) {
+
+            ob_start();
+            $this->stub = require_once($file);
+            $this->twig_content = ob_get_contents();
+            ob_end_clean();
+
+            $this->layout = $this->stub["layout"];
+
+            $this->data = $this->exec($this->stub["data"]);
+            foreach ($this->data as $k => $v) {
+                $this->view->$k = $v;
+            }
+
+            if ($php["methods"]) {
+                foreach ($php["methods"] as $name => $method) {
+                    $this->view->_methods[$name] = Closure::bind($method, $this->view, View::class);
+                }
+            }
+        }
     }
+
+    public function processCreated()
+    {
+        //created
+        $created = $this->stub["created"];
+        if ($created instanceof Closure) {
+            $reflection_function = new ReflectionFunction($created);
+
+            $parameters = [];
+            foreach ($reflection_function->getParameters() as $ref_par) {
+                if ($ref_par->name == "params") {
+                    $parameters[] = $this->context->_route->params;
+                } else {
+                    $parameters[] = null;
+                }
+            }
+
+            $created->call($this->view, ...$parameters);
+        }
+    }
+
+
+
 
     public function post(array $body = [])
     {
@@ -41,75 +103,33 @@ class Loader
         return $stub;
     }
 
-    public function render(array $data = [])
+    public function getHead(array $head)
     {
-        $context = new Context();
-        $context->_route = $this->route;
+        $h = $this->exec($this->stub["head"], $this->view);
 
-        $twig_content = "";
-        $ret = $data;
-        if (file_exists($this->path . ".php")) {
-
-            ob_start();
-            $php = require_once($this->path . ".php");
-            $twig_content = ob_get_contents();
-            ob_end_clean();
-
-            if ($php["data"]) {
-                $ret["data"] = $this->exec($php["data"], $this);
-            }
-
-            foreach ($ret["data"] as $k => $v) {
-                $context->$k = $v;
-            }
-
-            if ($php["methods"]) {
-                foreach ($php["methods"] as $name => $method) {
-                    $context->_methods[$name] = Closure::bind($method, $context, Context::class);
-                }
-            }
-
-            //created
-            $created = $php["created"];
-            if ($created instanceof Closure) {
-                $reflection_function = new ReflectionFunction($created);
-
-                $parameters = [];
-                foreach ($reflection_function->getParameters() as $ref_par) {
-                    if ($ref_par->name == "params") {
-                        $parameters[] = $context->_route->params;
-                    } else {
-                        $parameters[] = null;
-                    }
-                }
-
-
-                $created->call($context, ...$parameters);
-            }
-
-            if ($php["layout"]) {
-                $ret["layout"] = $php["layout"];
-            }
-
-
-            $ret["head"] = $this->exec($php["head"], $context) ?? [];
-            $ret["head"] = array_merge($data["head"] ?? [], $ret["head"]);
+        if ($h["title"]) {
+            $head["title"] = $h["title"];
         }
+        return $head;
+    }
 
-        $ret["data"] = (array)$context;
-        $ret["data"]["puxt"] = $data["puxt"];
+    public function render($puxt)
+    {
+
+        $data = (array)$this->view;;
+        $data["puxt"] = $puxt;
 
         if (file_exists($this->path . ".twig")) {
             $twig = $this->app->twig->load($this->path . ".twig");
-            $ret["puxt"] = $twig->render($ret["data"]);
+            $ret = $twig->render($data);
         } else {
 
             $twig_loader = new \Twig\Loader\ArrayLoader([
-                'page' => $twig_content,
+                'page' => $this->twig_content,
             ]);
             $twig = new \Twig\Environment($twig_loader);
 
-            $ret["puxt"] = $twig->render("page", $ret["data"]);
+            $ret = $twig->render("page", $data);
         }
 
         return $ret;

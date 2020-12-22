@@ -1,6 +1,9 @@
 <?php
 return [
     "layout" => "abc",
+    "head" => [
+        "title" => "abc"
+    ],
     "data" => function () {
 
 

@@ -11,6 +11,7 @@ class App
     public $request;
     public $base_path;
     public $document_root;
+    public $config = [];
 
     public function __construct(string $root)
     {
@@ -19,6 +20,11 @@ class App
 
         $loader = new \Twig\Loader\FilesystemLoader($this->root);
         $this->twig = new \Twig\Environment($loader);
+
+
+        if (file_exists($file = $root . "/puxt.config.php")) {
+            $this->config = require_once($file);
+        }
     }
 
     public function run()
@@ -40,7 +46,7 @@ class App
         }
 
         $data = [
-            "layout" => "default"
+            "head" => $this->config["head"]
         ];
 
 
@@ -87,26 +93,43 @@ class App
         }
 
 
-        $loader = new Loader("pages/" . $request_path, $this, $route);
+        $page_loader = new Loader("pages/" . $request_path, $this, $route);
 
-        if ($this->request->getMethod() == "POST") {
+
+        //$layout_loader = new Loader("layouts/" . $page_loader->layout ?? "default", $this, $route, $this->config["head"]);
+        $layout_loader = new Loader("layouts/default", $this, $route);
+        $layout_loader->processCreated();
+        $head = $layout_loader->getHead($this->config["head"]);
+
+
+        $page_loader->processCreated();
+        $head = $page_loader->getHead($head);
+
+        $puxt = $page_loader->render("");
+
+        $app = $layout_loader->render($puxt);
+
+
+        //$layout_loader->getHead();
+
+        /*   if ($this->request->getMethod() == "POST") {
 
             $ret = $loader->post($this->request->getParsedBody());
             die();
-        }
+        } */
 
-        $page = $loader->render($data);
+        //$page = $loader->render($data);
         //page layout
-        $layout_loader = new Loader("layouts/" . $page["layout"], $this, $route);
-        $layout = $layout_loader->render($page);
+        //$layout = $layout_loader->render($page);
 
         $app_template = $this->twig->load("app.twig");
 
-
         $data = [];
-        $data["app"] = $layout["puxt"];
+        $data["app"] = $app;
 
-        $data["head"] = $this->generateHeader($layout["head"]);
+        $data["head"] = $this->generateHeader($head);
+
+
 
         $app_html = $app_template->render($data);
 
@@ -119,6 +142,11 @@ class App
         if ($head["title"]) {
             $html[] = "<title>" . htmlentities($head['title']) . "</title>";
         }
+
+        foreach ($head["meta"] as $meta) {
+            $html[] = (string)html("meta")->attr($meta);
+        }
+
 
         return implode("\n", $html);
     }

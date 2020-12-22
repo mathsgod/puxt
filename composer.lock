@@ -4,8 +4,38 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "dad657ee14c8dee2dc100e2ca702a723",
+    "content-hash": "4bf0517170345ca5fabf03be2ff999ca",
     "packages": [
+        {
+            "name": "mathsgod/html",
+            "version": "1.0.12",
+            "source": {
+                "type": "git",
+                "url": "https://mathsgod:d97ca44a017f09f662c0761828b0f66caf373415@github.com/mathsgod/html.git",
+                "reference": "a5c77ab51216aec41918f3468889306e7d30f6ad"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "function.php"
+                ],
+                "psr-4": {
+                    "HTML\\": "src/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "authors": [
+                {
+                    "name": "Raymond Chong",
+                    "role": "Analyst programmer",
+                    "email": "raymond@hostlink.com.hk",
+                    "homepage": "https://raymond.hostlink.com.hk"
+                }
+            ],
+            "time": "2020-12-22T09:50:43+00:00"
+        },
         {
             "name": "mathsgod/php-psr7",
             "version": "1.0.19",
