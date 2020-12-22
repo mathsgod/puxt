@@ -126,10 +126,7 @@ class App
 
         $data = [];
         $data["app"] = $app;
-
         $data["head"] = $this->generateHeader($head);
-
-
         $data["html_attrs"] = $this->generateTagAttr($head["htmlAttrs"] ?? []);
         $data["head_attrs"] = $this->generateTagAttr($head["headAttrs"] ?? []);
         $data["body_attrs"] = $this->generateTagAttr($head["bodyAttrs"] ?? []);

@@ -8,6 +8,9 @@
 return [
     "head" => function () {
         return [
+            "htmlAttrs" => [
+                "lang" => "zh-hk"
+            ],
             "title" => $this->first_name . " " . $this->getLastName(),
             "meta" => [
                 ["hid" => "description", "name" => "description", "content" => "index"]

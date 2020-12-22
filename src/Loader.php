@@ -48,8 +48,8 @@ class Loader
                 $this->view->$k = $v;
             }
 
-            if ($php["methods"]) {
-                foreach ($php["methods"] as $name => $method) {
+            if ($this->stub["methods"]) {
+                foreach ($this->stub["methods"] as $name => $method) {
                     $this->view->_methods[$name] = Closure::bind($method, $this->view, View::class);
                 }
             }
@@ -107,6 +107,7 @@ class Loader
     {
         $h = $this->exec($this->stub["head"], $this->view);
 
+
         if ($h["title"]) {
             $head["title"] = $h["title"];
         }
@@ -122,6 +123,10 @@ class Loader
                 }
             }
             $head["meta"][] = $meta;
+        }
+
+        if ($h["htmlAttrs"]) {
+            $head["htmlAttrs"] = $h["htmlAttrs"];
         }
 
         return $head;
