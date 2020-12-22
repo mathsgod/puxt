@@ -17,6 +17,7 @@ class Loader
     public $data = [];
     public $layout;
     public $view;
+    public $middleware;
 
     public function __construct(string $path, $app, $route, $head = [])
     {
@@ -53,6 +54,11 @@ class Loader
                     $this->view->_methods[$name] = Closure::bind($method, $this->view, View::class);
                 }
             }
+
+            $middleware=$this->stub["middleware"];
+            //$this->middleware=
+
+
         }
     }
 
