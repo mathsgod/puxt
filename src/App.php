@@ -96,8 +96,8 @@ class App
         $page_loader = new Loader("pages/" . $request_path, $this, $route);
 
 
-        //$layout_loader = new Loader("layouts/" . $page_loader->layout ?? "default", $this, $route, $this->config["head"]);
-        $layout_loader = new Loader("layouts/default", $this, $route);
+        $layout_loader = new Loader("layouts/" . $page_loader->layout ?? "default", $this, $route, $this->config["head"]);
+        
         $layout_loader->processCreated();
         $head = $layout_loader->getHead($this->config["head"]);
 

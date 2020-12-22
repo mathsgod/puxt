@@ -2,7 +2,7 @@
 
 return [
     "head" => [
-        "title" => "test23ing",
+        "title" => "abc",
         "meta" => [
             ["charset" => "utf-8"],
             ["name" => "viewport", "content" => "width=device-width, initial-scale=1"],
