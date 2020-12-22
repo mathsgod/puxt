@@ -110,6 +110,20 @@ class Loader
         if ($h["title"]) {
             $head["title"] = $h["title"];
         }
+
+        foreach ($h["meta"] as $meta) {
+            if ($meta["hid"]) {
+
+                foreach ($head["meta"] as $k => $m) {
+                    if ($m["hid"] == $meta["hid"]) {
+                        $head["meta"][$k] = $meta;
+                        continue 2;
+                    }
+                }
+            }
+            $head["meta"][] = $meta;
+        }
+
         return $head;
     }
 

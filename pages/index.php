@@ -8,7 +8,10 @@
 return [
     "head" => function () {
         return [
-            "title" => $this->first_name . " " . $this->getLastName()
+            "title" => $this->first_name . " " . $this->getLastName(),
+            "meta" => [
+                ["hid" => "description", "name" => "description", "content" => "index"]
+            ]
         ];
     },
     "data" => function () {

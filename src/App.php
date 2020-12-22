@@ -130,10 +130,26 @@ class App
         $data["head"] = $this->generateHeader($head);
 
 
+        $data["html_attrs"] = $this->generateTagAttr($head["htmlAttrs"] ?? []);
+        $data["head_attrs"] = $this->generateTagAttr($head["headAttrs"] ?? []);
+        $data["body_attrs"] = $this->generateTagAttr($head["bodyAttrs"] ?? []);
 
         $app_html = $app_template->render($data);
 
         echo $app_html;
+    }
+
+    private function generateTagAttr(array $attrs)
+    {
+        $ret = [];
+        foreach ($attrs ?? [] as $name => $attr) {
+            if (is_array($attr)) {
+                $ret[] = "$name=\"" . htmlspecialchars(implode(" ", $attr)) . "\"";
+            } else {
+                $ret[] = "$name=\"" . htmlspecialchars($attr) . "\"";
+            }
+        }
+        return implode(" ", $ret);
     }
 
     private function generateHeader(array $head)
@@ -146,7 +162,6 @@ class App
         foreach ($head["meta"] as $meta) {
             $html[] = (string)html("meta")->attr($meta);
         }
-
 
         return implode("\n", $html);
     }
