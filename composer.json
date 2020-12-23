@@ -22,6 +22,7 @@
     "require": {
         "twig/twig": "^2.12",
         "mathsgod/php-psr7": "^1.0",
-        "mathsgod/html": "^1.0"
+        "mathsgod/html": "^1.0",
+        "twig/extensions": "^1.5"
     }
 }

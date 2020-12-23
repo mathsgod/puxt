@@ -1,0 +1,14 @@
+msgid "Hello 1"
+msgstr ""
+
+msgid "Hello 2"
+msgstr ""
+
+msgid "Hello 4"
+msgstr ""
+
+msgid "about us"
+msgstr "222"
+
+msgid "about us 123"
+msgstr "CNCNCNCN"

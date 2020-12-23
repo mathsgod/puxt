@@ -1,0 +1,14 @@
+msgid "Apple 1"
+msgstr "苹果1"
+
+msgid "Orange 2"
+msgstr ""
+
+msgid "Banana 3"
+msgstr ""
+
+msgid "about us"
+msgstr "ww12213234"
+
+msgid "Van"
+msgstr "来自"

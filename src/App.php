@@ -2,6 +2,7 @@
 
 namespace PUXT;
 
+use Exception;
 use PHP\Psr7\ServerRequest;
 use stdClass;
 
@@ -21,10 +22,24 @@ class App
         $loader = new \Twig\Loader\FilesystemLoader($this->root);
         $this->twig = new \Twig\Environment($loader, ["debug" => true]);
 
+        //$twig["environment"]->addExtension(new \Twig_Extensions_Extension_I18n());
+
 
         if (file_exists($file = $root . "/puxt.config.php")) {
             $this->config = require_once($file);
         }
+    }
+
+    private function getTextDomain(string $path)
+    {
+
+        $mo = glob($this->root . "/locale/" . $this->i18n->locale . "/LC_MESSAGES/" . $path . "-*.mo")[0];
+        if ($mo) {
+            $mo_file = substr($mo, strlen($this->root . "/locale/" . $this->i18n->locale . "/LC_MESSAGES/"));
+            $domain = preg_replace('/.[^.]*$/', '', $mo_file);
+            return $domain;
+        }
+        return uniqid();
     }
 
     public function run()
@@ -155,10 +170,22 @@ class App
 
         $head = $page_loader->getHead($head);
 
+
+        if ($this->i18n) {
+            $domain = $this->getTextDomain($page_loader->path);
+            bindtextdomain($domain, $this->root . "/locale");
+            textdomain($domain);
+        }
         $puxt = $page_loader->render("");
 
 
+        if ($this->i18n) {
+            $domain = $this->getTextDomain($layout_loader->path);
+            bindtextdomain($domain, $this->root . "/locale");
+            textdomain($domain);
+        }
         $app = $layout_loader->render($puxt);
+
 
 
         //$layout_loader->getHead();

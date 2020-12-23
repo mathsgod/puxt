@@ -3,6 +3,7 @@
 namespace PUXT;
 
 use Closure;
+use Exception;
 use ReflectionFunction;
 use stdClass;
 
@@ -163,18 +164,21 @@ class Loader
         //        $data["_context"] = $this->context;
         //$data["_context"] = "abc";
 
-        if (file_exists($this->path . ".twig")) {
-            $twig = $this->app->twig->load($this->path . ".twig");
-            $ret = $twig->render($data);
-        } else {
-            $twig_loader = new \Twig\Loader\ArrayLoader([
-                'page' => $this->twig_content,
-            ]);
-            $twig = new \Twig\Environment($twig_loader, ["debug" => true]);
+        try {
+            if (file_exists($this->path . ".twig")) {
+                $twig = $this->app->twig->load($this->path . ".twig");
+                $ret = $twig->render($data);
+            } else {
+                $twig_loader = new \Twig\Loader\ArrayLoader([
+                    'page' => $this->twig_content,
+                ]);
+                $twig = new \Twig\Environment($twig_loader, ["debug" => true]);
 
-            $ret = $twig->render("page", $data);
+                $ret = $twig->render("page", $data);
+            }
+        } catch (Exception $e) {
+            return $e->getMessage();
         }
-
         return $ret;
     }
 }

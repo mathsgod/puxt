@@ -1,0 +1,14 @@
+msgid "Hello 1"
+msgstr "蘋果"
+
+msgid "Hello 2"
+msgstr "你好2"
+
+msgid "Hello 4"
+msgstr "你好4"
+
+msgid "about us"
+msgstr "關於我們"
+
+msgid "about us 123"
+msgstr "sdfadf"
