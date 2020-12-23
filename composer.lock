@@ -8,11 +8,11 @@
     "packages": [
         {
             "name": "mathsgod/html",
-            "version": "1.0.12",
+            "version": "1.0.13",
             "source": {
                 "type": "git",
                 "url": "https://mathsgod:d97ca44a017f09f662c0761828b0f66caf373415@github.com/mathsgod/html.git",
-                "reference": "a5c77ab51216aec41918f3468889306e7d30f6ad"
+                "reference": "c0ee7459aeef468e988b48b8f4bf3e7774c9f6c5"
             },
             "type": "library",
             "autoload": {
@@ -34,7 +34,7 @@
                     "homepage": "https://raymond.hostlink.com.hk"
                 }
             ],
-            "time": "2020-12-22T09:50:43+00:00"
+            "time": "2020-12-23T04:56:57+00:00"
         },
         {
             "name": "mathsgod/php-psr7",

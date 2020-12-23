@@ -142,6 +142,16 @@ class Loader
             $head["headAttrs"] = $h["headAttrs"];
         }
 
+        foreach ($h["link"] as $link) {
+            $head["link"][] = $link;
+        }
+
+        foreach ($h["script"] as $script) {
+            $head["script"][] = $script;
+        }
+
+
+
         return $head;
     }
 

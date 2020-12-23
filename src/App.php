@@ -197,6 +197,16 @@ class App
             $html[] = (string)html("meta")->attr($meta);
         }
 
+        foreach ($head["link"] as $link) {
+            $html[] = (string)html("link")->attr($link);
+        }
+
+
+        foreach ($head["script"] as $script) {
+            $html[] = (string)html("script")->attr($script);
+        }
+
+
         return implode("\n", $html);
     }
 }
