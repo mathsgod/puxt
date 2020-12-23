@@ -19,7 +19,7 @@ class App
         $this->request = new ServerRequest();
 
         $loader = new \Twig\Loader\FilesystemLoader($this->root);
-        $this->twig = new \Twig\Environment($loader);
+        $this->twig = new \Twig\Environment($loader, ["debug" => true]);
 
 
         if (file_exists($file = $root . "/puxt.config.php")) {
@@ -57,55 +57,92 @@ class App
 
         if (count(glob($this->root . "/pages/" . $request_path . ".*")) == 0) {
 
-            $params_value = [];
-            do {
+            $path_path = explode("/", $request_path);
 
-                $e = explode("/", $request_path);
+            $s = [];
+            $test_path = [];
 
-                $p = array_pop($e);
-                $request_path = implode("/", $e);
+            foreach ($path_path as $i => $path) {
+                $s[] = $path;
+                $test_path[] = [
+                    "test" => implode("/", $s) . "/_*",
+                    "path" => $path,
+                    "suffix" => array_slice($path_path, $i + 1)
+                ];
+            }
+
+            $test_path = array_reverse($test_path);
 
 
-                $test_path = $this->root . "/pages/" . $request_path . "/_*" . (count($params_value) ? "/" : "") . implode("/", $params_value);
-                array_unshift($params_value, $p);
+            foreach ($test_path as $test) {
+                if (count($files = glob($this->root . "/pages/" . $test["test"]))) {
+                    $value = array_shift($test["suffix"]);
 
-                if (count($files = glob($test_path . ".*"))) {
+                    $f = $test["test"] . "/" . implode("/", $test["suffix"]);
                     $file = $files[0];
+                    if (is_file($file)) {
+                        $file = $files[0];
+                        $file = substr($file, strlen($this->root . "/pages/"));
 
-                    $ext = pathinfo($file, PATHINFO_EXTENSION);
-                    $file = substr($file, 0, -strlen($ext) - 1);
+                        $ext = pathinfo($file, PATHINFO_EXTENSION);
+                        $file = substr($file, 0, -strlen($ext) - 1);
 
-                    $s = explode("_*", $test_path);
-                    $f = substr($file, strlen($s[0]));
+                        $s = explode("_*", $f);
+                        $fa = substr($file, strlen($s[0]));
 
-                    $g = explode($s[1], $f);
 
-                    $name = substr($g[0], 1);
+                        $g = explode($s[1], $fa);
 
-                    $route->params->$name = $params_value[0];
+                        $name = substr($g[0], 1);
 
-                    $request_path = substr($files[0], strlen($this->root . "/pages/"));
-                    $ext = pathinfo($request_path, PATHINFO_EXTENSION);
-                    $request_path = substr($request_path, 0, -strlen($ext) - 1);
-                    break;
+                        $route->params->$name = $value;
+
+                        $request_path = $file;
+                        break;
+                    }
+
+
+
+                    if (count($files = glob($this->root . "/pages/" . $test["test"] . "/" . implode("/", $test["suffix"]) . ".*"))) {
+                        $file = $files[0];
+                        $file = substr($file, strlen($this->root . "/pages/"));
+
+                        $ext = pathinfo($file, PATHINFO_EXTENSION);
+                        $file = substr($file, 0, -strlen($ext) - 1);
+
+                        $s = explode("_*", $f);
+                        $fa = substr($file, strlen($s[0]));
+
+
+                        $g = explode($s[1], $fa);
+
+                        $name = substr($g[0], 1);
+
+                        $route->params->$name = $value;
+
+                        $request_path = $file;
+                        break;
+                    }
                 }
-            } while ($request_path);
+            }
         }
 
 
         $page_loader = new Loader("pages/" . $request_path, $this, $route);
 
 
-        $layout_loader = new Loader("layouts/" . $page_loader->layout ?? "default", $this, $route, $this->config["head"]);
-        
+        $layout_loader = new Loader("layouts/" . ($page_loader->layout ?? "default"), $this, $route, $this->config["head"]);
+
+
         $layout_loader->processCreated();
         $head = $layout_loader->getHead($this->config["head"]);
 
-
         $page_loader->processCreated();
+
         $head = $page_loader->getHead($head);
 
         $puxt = $page_loader->render("");
+
 
         $app = $layout_loader->render($puxt);
 

@@ -13,7 +13,7 @@ class Loader
     public $context;
 
     public $stub;
-    public $twig_content;
+    public $twig_content = "";
     public $data = [];
     public $layout;
     public $view;
@@ -26,7 +26,7 @@ class Loader
         $this->route = $route;
 
         $context = new Context;
-        $context->app = $app;
+        //$context->app = $app;
         $context->route = $route;
         $context->params = $route->params;
         $this->context = $context;
@@ -44,7 +44,8 @@ class Loader
 
             $this->layout = $this->stub["layout"];
 
-            $this->data = $this->exec($this->stub["data"]);
+            $this->data = $this->exec($this->stub["data"], $this);
+
             foreach ($this->data as $k => $v) {
                 $this->view->$k = $v;
             }
@@ -55,7 +56,7 @@ class Loader
                 }
             }
 
-            $middleware=$this->stub["middleware"];
+            $middleware = $this->stub["middleware"];
             //$this->middleware=
 
 
@@ -66,6 +67,7 @@ class Loader
     {
         //created
         $created = $this->stub["created"];
+
         if ($created instanceof Closure) {
             $reflection_function = new ReflectionFunction($created);
 
@@ -78,12 +80,9 @@ class Loader
                 }
             }
 
-            $created->call($this->view, ...$parameters);
+            $created->call($this->view, $this->context);
         }
     }
-
-
-
 
     public function post(array $body = [])
     {
@@ -135,24 +134,33 @@ class Loader
             $head["htmlAttrs"] = $h["htmlAttrs"];
         }
 
+        if ($h["bodyAttrs"]) {
+            $head["bodyAttrs"] = $h["bodyAttrs"];
+        }
+
+        if ($h["headAttrs"]) {
+            $head["headAttrs"] = $h["headAttrs"];
+        }
+
         return $head;
     }
 
     public function render($puxt)
     {
-
-        $data = (array)$this->view;;
+        $data = (array)$this->view;
         $data["puxt"] = $puxt;
+        $data["_params"] = $this->context->params;
+        //        $data["_context"] = $this->context;
+        //$data["_context"] = "abc";
 
         if (file_exists($this->path . ".twig")) {
             $twig = $this->app->twig->load($this->path . ".twig");
             $ret = $twig->render($data);
         } else {
-
             $twig_loader = new \Twig\Loader\ArrayLoader([
                 'page' => $this->twig_content,
             ]);
-            $twig = new \Twig\Environment($twig_loader);
+            $twig = new \Twig\Environment($twig_loader, ["debug" => true]);
 
             $ret = $twig->render("page", $data);
         }

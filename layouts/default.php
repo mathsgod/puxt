@@ -2,10 +2,10 @@
 
 return [
     "head" => [
-        "title" => "default"
+        "title" => "default aa"
     ],
     "data" => function () {
 
-        return ["hello" => "abc"];
+        return ["hello" => "world"];
     }
 ];

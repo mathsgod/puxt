@@ -3,7 +3,7 @@ return [
     "data" => [
         "id" => "abc"
     ],
-    "created" => function ($params) {
-        $this->id = $params->id;
+    "created" => function ($context) {
+        $this->id = $context->params->id;
     }
 ];
