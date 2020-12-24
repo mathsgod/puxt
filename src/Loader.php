@@ -173,7 +173,7 @@ class Loader
                     'page' => $this->twig_content,
                 ]);
                 $twig = new \Twig\Environment($twig_loader, ["debug" => true]);
-
+                $twig->addExtension(new \Twig_Extensions_Extension_I18n());
                 $ret = $twig->render("page", $data);
             }
         } catch (Exception $e) {

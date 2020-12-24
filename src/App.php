@@ -19,15 +19,15 @@ class App
         $this->root = $root;
         $this->request = new ServerRequest();
 
-        $loader = new \Twig\Loader\FilesystemLoader($this->root);
-        $this->twig = new \Twig\Environment($loader, ["debug" => true]);
-
-        //$twig["environment"]->addExtension(new \Twig_Extensions_Extension_I18n());
-
-
         if (file_exists($file = $root . "/puxt.config.php")) {
             $this->config = require_once($file);
         }
+
+        $loader = new \Twig\Loader\FilesystemLoader($this->root);
+        $this->twig = new \Twig\Environment($loader, ["debug" => true]);
+        $this->twig->addExtension(new \Twig_Extensions_Extension_I18n());
+        //$twig["environment"]->addExtension(new \Twig_Extensions_Extension_I18n());
+
     }
 
     private function getTextDomain(string $path)
@@ -58,6 +58,15 @@ class App
 
         if ($request_path == "") {
             $request_path = "index";
+        }
+
+
+        if (substr($request_path, 0, 5) == "_i18n") {
+
+            $path = substr($request_path, 6);
+            $i18n = new I18n\App($this->root, $this->config["i18n"], $path);
+            $i18n->run();
+            die();
         }
 
 
