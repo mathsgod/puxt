@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9048896a560a64c6e276a28ccd7004fd",
+    "content-hash": "8969fc49670b3a97d0c52d6e17470f49",
     "packages": [
         {
             "name": "mathsgod/html",
@@ -427,6 +427,7 @@
     ],
     "packages-dev": [
         {
+<<<<<<< HEAD
             "name": "gettext/gettext",
             "version": "v4.8.3",
             "source": {
@@ -571,35 +572,52 @@
                 "mathsgod/r-translate": "^1.0",
                 "twig/extensions": "^1.5",
                 "twig/twig": "^2.12"
+=======
+            "name": "hostlink/puxt-db",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/HostLink/puxt-db.git",
+                "reference": "3b5ec145117b1abeb98831f35f2c491532130602"
             },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/HostLink/puxt-db/zipball/3b5ec145117b1abeb98831f35f2c491532130602",
+                "reference": "3b5ec145117b1abeb98831f35f2c491532130602",
+                "shasum": ""
+            },
+            "require": {
+                "mathsgod/r-db": "^3.7"
+            },
+            "default-branch": true,
             "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "PUXT\\I18n\\": "src"
-                }
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "authors": [
                 {
                     "name": "Raymond Chong",
                     "email": "mathsgod@yahoo.com"
                 }
             ],
-            "description": "translation module for puxt",
-            "transport-options": {
-                "symlink": true,
-                "relative": true
-            }
+            "description": "puxt db library",
+            "support": {
+                "issues": "https://github.com/HostLink/puxt-db/issues",
+                "source": "https://github.com/HostLink/puxt-db/tree/main"
+            },
+            "time": "2020-12-28T04:19:47+00:00"
         },
         {
-            "name": "mathsgod/r-translate",
-            "version": "1.0.3",
+            "name": "mathsgod/data-structure",
+            "version": "1.3.1",
             "source": {
                 "type": "git",
-                "url": "https://mathsgod:d97ca44a017f09f662c0761828b0f66caf373415@github.com/mathsgod/r-translate.git",
-                "reference": "bdba467edfd197091e21635c4e0962f05bd1712f"
+                "url": "https://mathsgod:d97ca44a017f09f662c0761828b0f66caf373415@github.com/mathsgod/data-structure.git",
+                "reference": "35b7a592e007d735558ce6f7435adda985f0572a"
+            },
+            "require": {
+                "mathsgod/php-util": "^1.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "*"
+                "phpunit/phpunit": "^6.5"
             },
             "type": "library",
             "autoload": {
@@ -613,14 +631,174 @@
                     "email": "mathsgod@yahoo.com"
                 }
             ],
+            "description": "Data structure",
+            "time": "2020-07-17T10:12:32+00:00"
+        },
+        {
+            "name": "mathsgod/php-util",
+            "version": "1.1.3",
+            "source": {
+                "type": "git",
+                "url": "https://mathsgod:d97ca44a017f09f662c0761828b0f66caf373415@github.com/mathsgod/php-util.git",
+                "reference": "36c39f2a23831ea430c54499c0fea978b8000edc"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^6.5"
+>>>>>>> 7054ff8abe3505815b316d3eb48680e2faa9e5ef
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+<<<<<<< HEAD
+                    "PUXT\\I18n\\": "src"
+                }
+            },
+=======
+                    "PHP\\Util\\": "src/"
+                },
+                "files": [
+                    "function/function.php"
+                ]
+            },
+            "scripts": {
+                "test": [
+                    "phpunit tests"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+>>>>>>> 7054ff8abe3505815b316d3eb48680e2faa9e5ef
+            "authors": [
+                {
+                    "name": "Raymond Chong",
+                    "email": "mathsgod@yahoo.com"
+                }
+            ],
+<<<<<<< HEAD
+            "description": "translation module for puxt",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "mathsgod/r-translate",
+            "version": "1.0.3",
+            "source": {
+                "type": "git",
+                "url": "https://mathsgod:d97ca44a017f09f662c0761828b0f66caf373415@github.com/mathsgod/r-translate.git",
+                "reference": "bdba467edfd197091e21635c4e0962f05bd1712f"
+=======
+            "description": "a simple php util for data structure",
+            "time": "2020-09-25T05:21:25+00:00"
+        },
+        {
+            "name": "mathsgod/r-db",
+            "version": "3.7.0",
+            "source": {
+                "type": "git",
+                "url": "https://mathsgod:d97ca44a017f09f662c0761828b0f66caf373415@github.com/mathsgod/r-db.git",
+                "reference": "5c133b8c9ed385366cd9fc43e7f1c3a3c1d1aa88"
+            },
+            "require": {
+                "ext-pdo": "*",
+                "mathsgod/data-structure": "^1.3",
+                "mathsgod/php-util": "^1.1",
+                "php": ">=7.0",
+                "psr/log": "^1.1"
+>>>>>>> 7054ff8abe3505815b316d3eb48680e2faa9e5ef
+            },
+            "require-dev": {
+                "phpunit/phpunit": "*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "R\\": "src"
+                }
+            },
+<<<<<<< HEAD
+            "authors": [
+                {
+                    "name": "Raymond Chong",
+                    "email": "mathsgod@yahoo.com"
+                }
+            ],
             "description": "Using google translate to translate word",
             "time": "2020-12-24T08:32:45+00:00"
+=======
+            "license": [
+                "proprietary"
+            ],
+            "authors": [
+                {
+                    "name": "Raymond Chong"
+                }
+            ],
+            "description": "raymond framework db",
+            "time": "2020-12-03T08:56:07+00:00"
+        },
+        {
+            "name": "psr/log",
+            "version": "1.1.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/log.git",
+                "reference": "0f73288fd15629204f9d42b7055f72dacbe811fc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/log/zipball/0f73288fd15629204f9d42b7055f72dacbe811fc",
+                "reference": "0f73288fd15629204f9d42b7055f72dacbe811fc",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.1.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Psr\\Log\\": "Psr/Log/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "http://www.php-fig.org/"
+                }
+            ],
+            "description": "Common interface for logging libraries",
+            "homepage": "https://github.com/php-fig/log",
+            "keywords": [
+                "log",
+                "psr",
+                "psr-3"
+            ],
+            "support": {
+                "source": "https://github.com/php-fig/log/tree/1.1.3"
+            },
+            "time": "2020-03-23T09:12:05+00:00"
+>>>>>>> 7054ff8abe3505815b316d3eb48680e2faa9e5ef
         }
     ],
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
+<<<<<<< HEAD
         "hostlink/puxt-i18n": 20
+=======
+        "hostlink/puxt-db": 20
+>>>>>>> 7054ff8abe3505815b316d3eb48680e2faa9e5ef
     },
     "prefer-stable": false,
     "prefer-lowest": false,

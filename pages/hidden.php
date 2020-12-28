@@ -4,5 +4,8 @@ page
 <?php
 
 return [
-    "middleware" => "auth"
+    "middleware" => ["auth"],
+    "created" => function ($context) {
+        //print_R($context->db);
+    }
 ];

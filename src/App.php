@@ -2,6 +2,7 @@
 
 namespace PUXT;
 
+use Closure;
 use Exception;
 use PHP\Psr7\ServerRequest;
 use stdClass;
@@ -42,6 +43,48 @@ class App
         return uniqid();
     }
 
+    public function addPlugin(string $path)
+    {
+        if (!file_exists($path)) return;
+
+        $m = require_once($path);
+
+
+        if ($m instanceof Closure) {
+
+            $context = $this->context;
+
+            $inject = function (string $key, $value) use ($context) {
+                $context->$key = $value;
+            };
+
+
+            $m->call($this, $context, $inject);
+        }
+    }
+
+    private function loadModule($module)
+    {
+        $options = [];
+        if (is_array($module)) {
+            $options = $module[1];
+            $module = $module[0];
+        }
+
+        if (is_dir($this->root . "/vendor/" . $module)) {
+            $entry = $this->root . "/vendor/"  . $module . "/index.php";
+        }
+
+        if (is_dir($this->root . "/" . $module)) {
+            $entry = $this->root . "/" . $module . "/index.php";
+        }
+
+        $m = require_once($entry);
+        if ($m instanceof Closure) {
+            $m->call($this, $options);
+        }
+    }
+
     public function run()
     {
         //base path
@@ -50,16 +93,82 @@ class App
             $this->base_path .= "/";
         }
 
-
         $this->document_root = substr($this->root . "/", 0, -strlen($this->base_path));
         $path = $this->request->getUri()->getPath();
 
         $request_path = substr($path, strlen($this->base_path));
 
+        if ($request_path === false) {
+            $request_path = "error";
+        }
+
         if ($request_path == "") {
             $request_path = "index";
         }
 
+        $route = new Route();
+        $route->path = $request_path;
+        $route->params =  new stdClass;
+
+        $this->context = new Context;
+        //$context->app = $app;
+        $this->context->route = $route;
+        $this->context->params = $route->params;
+
+
+        //modules
+        $modules = $this->config["modules"] ?? [];
+        foreach ($modules as $module) {
+            $this->loadModule($module);
+        }
+
+
+        $this->render($request_path);
+    }
+
+    private function generateTagAttr(array $attrs)
+    {
+        $ret = [];
+        foreach ($attrs ?? [] as $name => $attr) {
+            if (is_array($attr)) {
+                $ret[] = "$name=\"" . htmlspecialchars(implode(" ", $attr)) . "\"";
+            } else {
+                $ret[] = "$name=\"" . htmlspecialchars($attr) . "\"";
+            }
+        }
+        return implode(" ", $ret);
+    }
+
+    private function generateHeader(array $head)
+    {
+        $html = [];
+        if ($head["title"]) {
+            $html[] = "<title>" . htmlentities($head['title']) . "</title>";
+        }
+
+        foreach ($head["meta"] as $meta) {
+            $html[] = (string)html("meta")->attr($meta);
+        }
+
+        foreach ($head["link"] as $link) {
+            $html[] = (string)html("link")->attr($link);
+        }
+
+
+        foreach ($head["script"] as $script) {
+            $html[] = (string)html("script")->attr($script);
+        }
+
+
+        return implode("\n", $html);
+    }
+
+    public function render(string $request_path)
+    {
+
+        if (substr($request_path, 0, 1) == "/") {
+            $request_path = substr($request_path, 1);
+        }
 
         if (substr($request_path, 0, 5) == "_i18n") {
 
@@ -88,9 +197,8 @@ class App
         ];
 
 
-        $route = new Route();
-        $route->path = $request_path;
-        $route->params =  new stdClass;
+
+        $context = $this->context;
 
 
         if (count(glob($this->root . "/pages/" . $request_path . ".*")) == 0) {
@@ -166,14 +274,62 @@ class App
         }
 
 
-        $page_loader = new Loader("pages/" . $request_path, $this, $route);
+        $page = "pages/" . $request_path;
+        $pages = glob($this->root . "/" . $page . ".*");
+
+        if (count($pages) == 0) { //page not found
+            if ($request_path == "error") { //error page not found,load default
+                $page = "vendor/mathsgod/puxt/pages/error";
+            } else {
+                header("location: error");
+                return;
+            }
+        }
 
 
-        $layout_loader = new Loader("layouts/" . ($page_loader->layout ?? "default"), $this, $route, $this->config["head"]);
+        $page_loader = new Loader($page, $this, $context);
+
+        echo $page_loader->render("test");
+        die();
+
+        $layout = "layouts/" . ($page_loader->layout ?? "default");
+        $layouts = glob($this->root . "/" . $layout . ".*");
+        if (count($layouts) == 0) { //layout not found
+            $layout = "vendor/mathsgod/puxt/layouts/default";
+        }
+
+        $layout_loader = new Loader($layout, $this, $context, $this->config["head"]);
+
+
+        foreach ($layout_loader->middleware as $middleware) {
+            $m = require_once($this->root . "/middleware/$middleware.php");
+            if ($m instanceof Closure) {
+                $m->call($this, $context);
+
+                if ($context->_redirected) {
+                    $this->render($context->_redirected_url);
+                    return;
+                }
+            }
+        }
+
+
+        foreach ($page_loader->middleware as $middleware) {
+            $m = require_once($this->root . "/middleware/$middleware.php");
+            if ($m instanceof Closure) {
+                $m->call($this, $context);
+
+                if ($context->_redirected) {
+                    $this->render($context->_redirected_url);
+                    return;
+                }
+            }
+        }
+
 
 
         $layout_loader->processCreated();
-        $head = $layout_loader->getHead($this->config["head"]);
+        $head = $layout_loader->getHead($this->config["head"] ?? []);
 
         $page_loader->processCreated();
 
@@ -197,19 +353,7 @@ class App
 
 
 
-        //$layout_loader->getHead();
-
-        /*   if ($this->request->getMethod() == "POST") {
-
-            $ret = $loader->post($this->request->getParsedBody());
-            die();
-        } */
-
-        //$page = $loader->render($data);
-        //page layout
-        //$layout = $layout_loader->render($page);
-
-        $app_template = $this->twig->load("app.twig");
+        $app_template = $this->getAppTemplate();
 
         $data = [];
         $data["app"] = $app;
@@ -217,46 +361,22 @@ class App
         $data["html_attrs"] = $this->generateTagAttr($head["htmlAttrs"] ?? []);
         $data["head_attrs"] = $this->generateTagAttr($head["headAttrs"] ?? []);
         $data["body_attrs"] = $this->generateTagAttr($head["bodyAttrs"] ?? []);
-
-        $app_html = $app_template->render($data);
-
-        echo $app_html;
+        echo $app_template->render($data);
     }
 
-    private function generateTagAttr(array $attrs)
+    private function getAppTemplate()
     {
-        $ret = [];
-        foreach ($attrs ?? [] as $name => $attr) {
-            if (is_array($attr)) {
-                $ret[] = "$name=\"" . htmlspecialchars(implode(" ", $attr)) . "\"";
-            } else {
-                $ret[] = "$name=\"" . htmlspecialchars($attr) . "\"";
-            }
+        if (file_exists($this->root . "/app.twig")) {
+            return $this->getTemplate("app.twig");
+        } else { //load from default
+            $loader = new \Twig\Loader\FilesystemLoader(dirname(__DIR__));
+            $twig = new \Twig\Environment($loader);
+            return $twig->load("app.twig");
         }
-        return implode(" ", $ret);
     }
 
-    private function generateHeader(array $head)
+    public function getTemplate(string $file)
     {
-        $html = [];
-        if ($head["title"]) {
-            $html[] = "<title>" . htmlentities($head['title']) . "</title>";
-        }
-
-        foreach ($head["meta"] as $meta) {
-            $html[] = (string)html("meta")->attr($meta);
-        }
-
-        foreach ($head["link"] as $link) {
-            $html[] = (string)html("link")->attr($link);
-        }
-
-
-        foreach ($head["script"] as $script) {
-            $html[] = (string)html("script")->attr($script);
-        }
-
-
-        return implode("\n", $html);
+        return $this->twig->load($file);
     }
 }

@@ -33,6 +33,7 @@
         "twig/extensions": "^1.5"
     },
     "require-dev": {
-        "hostlink/puxt-i18n": "dev-master"
+        "hostlink/puxt-i18n": "dev-master",
+        "hostlink/puxt-db": "dev-main"
     }
 }
