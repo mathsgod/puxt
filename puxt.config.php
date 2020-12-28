@@ -30,8 +30,8 @@ return [
         "username" => "admin",
         "password" => "111111"
     ],
-    "i18n" => [
+   /*  "i18n" => [
         "locales" => ['en', 'fr', 'es'],
         "defaultLocale" => "en"
-    ]
+    ] */
 ];

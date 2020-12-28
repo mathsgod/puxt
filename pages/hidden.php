@@ -4,5 +4,5 @@ page
 <?php
 
 return [
-    "middleware" => "auth"
+    "middleware" => ["auth"]
 ];

@@ -2,6 +2,7 @@
 
 namespace PUXT;
 
+use Closure;
 use Exception;
 use PHP\Psr7\ServerRequest;
 use stdClass;
@@ -56,10 +57,60 @@ class App
 
         $request_path = substr($path, strlen($this->base_path));
 
+        if ($request_path === false) {
+            $request_path = "error";
+        }
+
         if ($request_path == "") {
             $request_path = "index";
         }
 
+        $this->render($request_path);
+    }
+
+    private function generateTagAttr(array $attrs)
+    {
+        $ret = [];
+        foreach ($attrs ?? [] as $name => $attr) {
+            if (is_array($attr)) {
+                $ret[] = "$name=\"" . htmlspecialchars(implode(" ", $attr)) . "\"";
+            } else {
+                $ret[] = "$name=\"" . htmlspecialchars($attr) . "\"";
+            }
+        }
+        return implode(" ", $ret);
+    }
+
+    private function generateHeader(array $head)
+    {
+        $html = [];
+        if ($head["title"]) {
+            $html[] = "<title>" . htmlentities($head['title']) . "</title>";
+        }
+
+        foreach ($head["meta"] as $meta) {
+            $html[] = (string)html("meta")->attr($meta);
+        }
+
+        foreach ($head["link"] as $link) {
+            $html[] = (string)html("link")->attr($link);
+        }
+
+
+        foreach ($head["script"] as $script) {
+            $html[] = (string)html("script")->attr($script);
+        }
+
+
+        return implode("\n", $html);
+    }
+
+    public function render(string $request_path)
+    {
+
+        if (substr($request_path, 0, 1) == "/") {
+            $request_path = substr($request_path, 1);
+        }
 
         if (substr($request_path, 0, 5) == "_i18n") {
 
@@ -88,9 +139,15 @@ class App
         ];
 
 
+
         $route = new Route();
         $route->path = $request_path;
         $route->params =  new stdClass;
+
+        $context = new Context;
+        //$context->app = $app;
+        $context->route = $route;
+        $context->params = $route->params;
 
 
         if (count(glob($this->root . "/pages/" . $request_path . ".*")) == 0) {
@@ -167,9 +224,24 @@ class App
 
 
         $page_loader = new Loader("pages/" . $request_path, $this, $route);
-
-
         $layout_loader = new Loader("layouts/" . ($page_loader->layout ?? "default"), $this, $route, $this->config["head"]);
+
+
+        foreach ($layout_loader->middleware as $middleware) {
+        }
+
+        foreach ($page_loader->middleware as $middleware) {
+            $m = require_once($this->root . "/middleware/$middleware.php");
+            if ($m instanceof Closure) {
+                $m->call($this, $context);
+
+                if ($context->_redirected) {
+                    
+                    $this->render($context->_redirected_url);
+                    return;
+                }
+            }
+        }
 
 
         $layout_loader->processCreated();
@@ -221,42 +293,5 @@ class App
         $app_html = $app_template->render($data);
 
         echo $app_html;
-    }
-
-    private function generateTagAttr(array $attrs)
-    {
-        $ret = [];
-        foreach ($attrs ?? [] as $name => $attr) {
-            if (is_array($attr)) {
-                $ret[] = "$name=\"" . htmlspecialchars(implode(" ", $attr)) . "\"";
-            } else {
-                $ret[] = "$name=\"" . htmlspecialchars($attr) . "\"";
-            }
-        }
-        return implode(" ", $ret);
-    }
-
-    private function generateHeader(array $head)
-    {
-        $html = [];
-        if ($head["title"]) {
-            $html[] = "<title>" . htmlentities($head['title']) . "</title>";
-        }
-
-        foreach ($head["meta"] as $meta) {
-            $html[] = (string)html("meta")->attr($meta);
-        }
-
-        foreach ($head["link"] as $link) {
-            $html[] = (string)html("link")->attr($link);
-        }
-
-
-        foreach ($head["script"] as $script) {
-            $html[] = (string)html("script")->attr($script);
-        }
-
-
-        return implode("\n", $html);
     }
 }

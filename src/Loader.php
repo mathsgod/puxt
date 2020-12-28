@@ -57,7 +57,10 @@ class Loader
                 }
             }
 
-            $middleware = $this->stub["middleware"];
+            $this->middleware = $this->stub["middleware"] ?? [];
+
+            
+
             //$this->middleware=
 
 
