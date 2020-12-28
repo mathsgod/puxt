@@ -43,6 +43,26 @@ class App
         return uniqid();
     }
 
+    private function loadModule(string $module)
+    {
+
+        if (is_dir($this->root . "/" . $module)) {
+            $entry = $this->root . "/" . $module . "/index.php";
+        }
+
+
+        $context = $this->context;
+
+        $inject = function (string $key, $value) use ($context) {
+            $context->$key = $value;
+        };
+        $m = require_once($entry);
+
+        if ($m instanceof Closure) {
+            $m->call($this, $context, $inject);
+        }
+    }
+
     public function run()
     {
         //base path
@@ -50,7 +70,6 @@ class App
         if (substr($this->base_path, -1) != "/") {
             $this->base_path .= "/";
         }
-
 
         $this->document_root = substr($this->root . "/", 0, -strlen($this->base_path));
         $path = $this->request->getUri()->getPath();
@@ -64,6 +83,23 @@ class App
         if ($request_path == "") {
             $request_path = "index";
         }
+
+        $route = new Route();
+        $route->path = $request_path;
+        $route->params =  new stdClass;
+
+        $this->context = new Context;
+        //$context->app = $app;
+        $this->context->route = $route;
+        $this->context->params = $route->params;
+
+
+        //modules
+        $modules = $this->config["modules"] ?? [];
+        foreach ($modules as $module) {
+            $this->loadModule($module);
+        }
+
 
         $this->render($request_path);
     }
@@ -140,14 +176,7 @@ class App
 
 
 
-        $route = new Route();
-        $route->path = $request_path;
-        $route->params =  new stdClass;
-
-        $context = new Context;
-        //$context->app = $app;
-        $context->route = $route;
-        $context->params = $route->params;
+        $context = $this->context;
 
 
         if (count(glob($this->root . "/pages/" . $request_path . ".*")) == 0) {
@@ -223,12 +252,13 @@ class App
         }
 
 
-        $page_loader = new Loader("pages/" . $request_path, $this, $route);
-        $layout_loader = new Loader("layouts/" . ($page_loader->layout ?? "default"), $this, $route, $this->config["head"]);
+        $page_loader = new Loader("pages/" . $request_path, $this, $context);
+        $layout_loader = new Loader("layouts/" . ($page_loader->layout ?? "default"), $this, $context, $this->config["head"]);
 
 
         foreach ($layout_loader->middleware as $middleware) {
         }
+
 
         foreach ($page_loader->middleware as $middleware) {
             $m = require_once($this->root . "/middleware/$middleware.php");
@@ -236,7 +266,6 @@ class App
                 $m->call($this, $context);
 
                 if ($context->_redirected) {
-                    
                     $this->render($context->_redirected_url);
                     return;
                 }
@@ -244,11 +273,12 @@ class App
         }
 
 
+
         $layout_loader->processCreated();
         $head = $layout_loader->getHead($this->config["head"]);
 
         $page_loader->processCreated();
-
+        
         $head = $page_loader->getHead($head);
 
 

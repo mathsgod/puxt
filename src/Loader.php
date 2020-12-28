@@ -15,26 +15,17 @@ class Loader
 
     public $stub;
     public $twig_content = "";
-    public $data = [];
     public $layout;
     public $view;
     public $middleware;
 
-    public function __construct(string $path, $app, $route, $head = [])
+    public function __construct(string $path, $app, Context $context, $head = [])
     {
         $this->path = $path;
         $this->app = $app;
-        $this->route = $route;
-
-        $context = new Context;
-        //$context->app = $app;
-        $context->route = $route;
-        $context->params = $route->params;
         $this->context = $context;
 
-
         $this->view = new View();
-        $this->_route = $this->route;
 
         if (file_exists($file = $this->path . ".php")) {
 
@@ -43,11 +34,13 @@ class Loader
             $this->twig_content = ob_get_contents();
             ob_end_clean();
 
+
+
             $this->layout = $this->stub["layout"];
 
-            $this->data = $this->exec($this->stub["data"], $this);
+            $data = $this->exec($this->stub["data"], $this);
 
-            foreach ($this->data as $k => $v) {
+            foreach ($data as $k => $v) {
                 $this->view->$k = $v;
             }
 
@@ -58,12 +51,6 @@ class Loader
             }
 
             $this->middleware = $this->stub["middleware"] ?? [];
-
-            
-
-            //$this->middleware=
-
-
         }
     }
 
@@ -71,19 +58,7 @@ class Loader
     {
         //created
         $created = $this->stub["created"];
-
         if ($created instanceof Closure) {
-            $reflection_function = new ReflectionFunction($created);
-
-            $parameters = [];
-            foreach ($reflection_function->getParameters() as $ref_par) {
-                if ($ref_par->name == "params") {
-                    $parameters[] = $this->context->_route->params;
-                } else {
-                    $parameters[] = null;
-                }
-            }
-
             $created->call($this->view, $this->context);
         }
     }

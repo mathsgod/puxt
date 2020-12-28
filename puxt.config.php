@@ -34,4 +34,8 @@ return [
         "locales" => ['en', 'fr', 'es'],
         "defaultLocale" => "en"
     ] */
+
+    "modules"=>[
+        "modules/DB"
+    ]
 ];
