@@ -43,8 +43,31 @@ class App
         return uniqid();
     }
 
-    private function loadModule(string $module)
+    public function addPlugin(string $path)
     {
+        if (!file_exists($path)) return;
+
+        $m = require_once($path);
+
+        if ($m instanceof Closure) {
+
+            $context = $this->context;
+
+            $inject = function (string $key, $value) use ($context) {
+                $context->$key = $value;
+            };
+
+
+            $m->call($this, $context, $inject);
+        }
+    }
+
+    private function loadModule($module)
+    {
+        if (is_array($module)) {
+            $options = $module[1];
+            $module = $module[0];
+        }
 
         if (is_dir($this->root . "/" . $module)) {
             $entry = $this->root . "/" . $module . "/index.php";
@@ -278,7 +301,7 @@ class App
         $head = $layout_loader->getHead($this->config["head"]);
 
         $page_loader->processCreated();
-        
+
         $head = $page_loader->getHead($head);
 
 

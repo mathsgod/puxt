@@ -8,7 +8,6 @@ class DB
     }
 }
 
-return function ($context, $inject) {
-
-    $inject("db", new DB());
+return function ($options) {
+    $this->addPlugin(__DIR__ . "/plugins.php");
 };
