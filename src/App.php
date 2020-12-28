@@ -275,7 +275,14 @@ class App
 
 
         $page_loader = new Loader("pages/" . $request_path, $this, $context);
-        $layout_loader = new Loader("layouts/" . ($page_loader->layout ?? "default"), $this, $context, $this->config["head"]);
+
+        $layout = "layouts/" . ($page_loader->layout ?? "default");
+        $layouts = glob($this->root . "/" . $layout . ".*");
+        if (count($layouts) == 0) { //layout not found
+            $layout = "vendor/mathsgod/puxt/layouts/default";
+        }
+
+        $layout_loader = new Loader($layout, $this, $context, $this->config["head"]);
 
 
         foreach ($layout_loader->middleware as $middleware) {
@@ -297,7 +304,7 @@ class App
 
 
         $layout_loader->processCreated();
-        $head = $layout_loader->getHead($this->config["head"]);
+        $head = $layout_loader->getHead($this->config["head"] ?? []);
 
         $page_loader->processCreated();
 
