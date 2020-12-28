@@ -49,7 +49,7 @@ class App
 
         $m = require_once($path);
 
-        
+
         if ($m instanceof Closure) {
 
             $context = $this->context;
@@ -58,7 +58,7 @@ class App
                 $context->$key = $value;
             };
 
-    
+
             $m->call($this, $context, $inject);
         }
     }
@@ -321,19 +321,7 @@ class App
 
 
 
-        //$layout_loader->getHead();
-
-        /*   if ($this->request->getMethod() == "POST") {
-
-            $ret = $loader->post($this->request->getParsedBody());
-            die();
-        } */
-
-        //$page = $loader->render($data);
-        //page layout
-        //$layout = $layout_loader->render($page);
-
-        $app_template = $this->twig->load("app.twig");
+        $app_template = $this->getAppTemplate();
 
         $data = [];
         $data["app"] = $app;
@@ -345,5 +333,16 @@ class App
         $app_html = $app_template->render($data);
 
         echo $app_html;
+    }
+
+    private function getAppTemplate()
+    {
+        if (file_exists($this->root . "/app.twig")) {
+            return $this->twig->load("app.twig");
+        } else { //load from default
+            $loader = new \Twig\Loader\FilesystemLoader(dirname(__DIR__));
+            $twig = new \Twig\Environment($loader);
+            return $twig->load("app.twig");
+        }
     }
 }
