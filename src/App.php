@@ -274,7 +274,23 @@ class App
         }
 
 
-        $page_loader = new Loader("pages/" . $request_path, $this, $context);
+        $page = "pages/" . $request_path;
+        $pages = glob($this->root . "/" . $page . ".*");
+
+        if (count($pages) == 0) { //page not found
+            if ($request_path == "error") { //error page not found,load default
+                $page = "vendor/mathsgod/puxt/pages/error";
+            } else {
+                header("location: error");
+                return;
+            }
+        }
+
+
+        $page_loader = new Loader($page, $this, $context);
+
+        echo $page_loader->render("test");
+        die();
 
         $layout = "layouts/" . ($page_loader->layout ?? "default");
         $layouts = glob($this->root . "/" . $layout . ".*");
@@ -286,6 +302,15 @@ class App
 
 
         foreach ($layout_loader->middleware as $middleware) {
+            $m = require_once($this->root . "/middleware/$middleware.php");
+            if ($m instanceof Closure) {
+                $m->call($this, $context);
+
+                if ($context->_redirected) {
+                    $this->render($context->_redirected_url);
+                    return;
+                }
+            }
         }
 
 
