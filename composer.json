@@ -3,13 +3,6 @@
         {
             "type": "composer",
             "url": "https://raymond2.hostlink.com.hk/satis/web"
-        },
-        {
-            "type": "path",
-            "url": "../puxt-i18n",
-            "options": {
-                "symlink": true
-            }
         }
     ],
     "name": "mathsgod/puxt",
@@ -33,7 +26,7 @@
         "twig/extensions": "^1.5"
     },
     "require-dev": {
-        "hostlink/puxt-i18n": "dev-master",
-        "hostlink/puxt-db": "dev-main"
+        "hostlink/puxt-db": "^1.0",
+        "hostlink/puxt-i18n": "^1.0"
     }
 }

@@ -25,10 +25,10 @@ return [
         ]
     ],
 
-    /*  "i18n" => [
+    "i18n" => [
         "locales" => ['en', 'fr', 'es'],
         "defaultLocale" => "en"
-    ] */
+    ],
 
     "database" => [
         "hostname" => "127.0.0.1",
@@ -38,6 +38,7 @@ return [
         "database" => "raymond",
     ],
     "modules" => [
-        "hostlink/puxt-db"
+        "hostlink/puxt-db",
+        "hostlink/puxt-i18n"
     ]
 ];

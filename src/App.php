@@ -83,6 +83,7 @@ class App
         if ($m instanceof Closure) {
             $m->call($this, $options);
         }
+        
     }
 
     public function run()
@@ -179,19 +180,7 @@ class App
         }
 
 
-        if ($i18n = $this->config["i18n"]) {
-            $this->i18n = new stdClass();
-            $this->i18n->locale = $i18n["defaultLocale"];
-            $paths = explode("/", $request_path);
-            if (in_array($paths[0], $i18n["locales"])) {
-
-
-                $this->i18n->locale = array_shift($paths);
-                $request_path = implode("/", $paths);
-            }
-        }
-
-
+    
         $data = [
             "head" => $this->config["head"]
         ];
