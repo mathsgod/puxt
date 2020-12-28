@@ -32,9 +32,9 @@ class App
     private function getTextDomain(string $path)
     {
 
-        $mo = glob($this->root . "/locale/" . $this->i18n->locale . "/LC_MESSAGES/" . $path . "-*.mo")[0];
+        $mo = glob($this->root . "/locale/" . $this->context->i18n->locale . "/LC_MESSAGES/" . $path . "-*.mo")[0];
         if ($mo) {
-            $mo_file = substr($mo, strlen($this->root . "/locale/" . $this->i18n->locale . "/LC_MESSAGES/"));
+            $mo_file = substr($mo, strlen($this->root . "/locale/" . $this->context->i18n->locale . "/LC_MESSAGES/"));
             $domain = preg_replace('/.[^.]*$/', '', $mo_file);
             return $domain;
         }
@@ -77,6 +77,11 @@ class App
             $entry = $this->root . "/" . $module . "/index.php";
         }
 
+        if (!$entry) {
+            echo "Module: $module not found";
+        }
+
+
         $m = require_once($entry);
         if ($m instanceof Closure) {
             $m->call($this, $options);
@@ -95,7 +100,6 @@ class App
         $path = $this->request->getUri()->getPath();
 
         $request_path = substr($path, strlen($this->base_path));
-
         if ($request_path === false) {
             $request_path = "error";
         }
@@ -121,7 +125,7 @@ class App
         }
 
 
-        $this->render($request_path);
+        $this->render($this->context->route->path);
     }
 
     private function generateTagAttr(array $attrs)
@@ -168,12 +172,9 @@ class App
             $request_path = substr($request_path, 1);
         }
 
-
         $data = [
             "head" => $this->config["head"]
         ];
-
-
 
         $context = $this->context;
 
@@ -308,7 +309,8 @@ class App
         $head = $page_loader->getHead($head);
 
 
-        if ($this->i18n) {
+        if ($this->context->i18n) {
+            setlocale(LC_ALL, $this->context->i18n->locale);
             $domain = $this->getTextDomain($page_loader->path);
             bindtextdomain($domain, $this->root . "/locale");
             textdomain($domain);
@@ -316,7 +318,8 @@ class App
         $puxt = $page_loader->render("");
 
 
-        if ($this->i18n) {
+        if ($this->context->i18n) {
+            setlocale(LC_ALL, $this->context->i18n->locale);
             $domain = $this->getTextDomain($layout_loader->path);
             bindtextdomain($domain, $this->root . "/locale");
             textdomain($domain);
