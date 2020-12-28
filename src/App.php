@@ -329,20 +329,22 @@ class App
         $data["html_attrs"] = $this->generateTagAttr($head["htmlAttrs"] ?? []);
         $data["head_attrs"] = $this->generateTagAttr($head["headAttrs"] ?? []);
         $data["body_attrs"] = $this->generateTagAttr($head["bodyAttrs"] ?? []);
-
-        $app_html = $app_template->render($data);
-
-        echo $app_html;
+        echo $app_template->render($data);
     }
 
     private function getAppTemplate()
     {
         if (file_exists($this->root . "/app.twig")) {
-            return $this->twig->load("app.twig");
+            return $this->getTemplate("app.twig");
         } else { //load from default
             $loader = new \Twig\Loader\FilesystemLoader(dirname(__DIR__));
             $twig = new \Twig\Environment($loader);
             return $twig->load("app.twig");
         }
+    }
+
+    public function getTemplate(string $file)
+    {
+        return $this->twig->load($file);
     }
 }
