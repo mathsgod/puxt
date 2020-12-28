@@ -7,25 +7,10 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: \n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2020-09-09T16:35:31+08:00\n"
-"PO-Revision-Date: 2020-09-09T16:35:31+08:00\n"
-"Language: en\n"
+"POT-Creation-Date: 2020-12-24T08:49:11+00:00\n"
+"PO-Revision-Date: 2020-12-24T08:49:11+00:00\n"
+"Language: es\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-
-msgid "Apple 1"
-msgstr "Apple 1"
-
-msgid "Orange 2"
-msgstr ""
-
-msgid "Banana 3"
-msgstr ""
-
-msgid "about us"
-msgstr "4564576456"
-
-msgid "Van"
-msgstr ""
 
 msgid "hello"
 msgstr "hello"
