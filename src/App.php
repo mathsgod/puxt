@@ -27,8 +27,6 @@ class App
         $loader = new \Twig\Loader\FilesystemLoader($this->root);
         $this->twig = new \Twig\Environment($loader, ["debug" => true]);
         $this->twig->addExtension(new \Twig_Extensions_Extension_I18n());
-        //$twig["environment"]->addExtension(new \Twig_Extensions_Extension_I18n());
-
     }
 
     private function getTextDomain(string $path)
@@ -220,7 +218,7 @@ class App
 
                         $name = substr($g[0], 1);
 
-                        $route->params->$name = $value;
+                        $context->route->params->$name = $value;
 
                         $request_path = $file;
                         break;
@@ -243,7 +241,7 @@ class App
 
                         $name = substr($g[0], 1);
 
-                        $route->params->$name = $value;
+                        $context->route->params->$name = $value;
 
                         $request_path = $file;
                         break;
@@ -301,8 +299,6 @@ class App
                 }
             }
         }
-
-
 
         $layout_loader->processCreated();
         $head = $layout_loader->getHead($this->config["head"] ?? []);
