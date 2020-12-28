@@ -83,7 +83,6 @@ class App
         if ($m instanceof Closure) {
             $m->call($this, $options);
         }
-        
     }
 
     public function run()
@@ -171,16 +170,7 @@ class App
             $request_path = substr($request_path, 1);
         }
 
-        if (substr($request_path, 0, 5) == "_i18n") {
 
-            $path = substr($request_path, 6);
-            $i18n = new I18n\App($this->root, $this->config["i18n"], $path);
-            $i18n->run();
-            die();
-        }
-
-
-    
         $data = [
             "head" => $this->config["head"]
         ];
@@ -277,9 +267,6 @@ class App
 
 
         $page_loader = new Loader($page, $this, $context);
-
-        echo $page_loader->render("test");
-        die();
 
         $layout = "layouts/" . ($page_loader->layout ?? "default");
         $layouts = glob($this->root . "/" . $layout . ".*");
