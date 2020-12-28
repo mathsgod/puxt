@@ -49,6 +49,7 @@ class App
 
         $m = require_once($path);
 
+        
         if ($m instanceof Closure) {
 
             $context = $this->context;
@@ -57,32 +58,30 @@ class App
                 $context->$key = $value;
             };
 
-
+    
             $m->call($this, $context, $inject);
         }
     }
 
     private function loadModule($module)
     {
+        $options = [];
         if (is_array($module)) {
             $options = $module[1];
             $module = $module[0];
+        }
+
+        if (is_dir($this->root . "/vendor/" . $module)) {
+            $entry = $this->root . "/vendor/"  . $module . "/index.php";
         }
 
         if (is_dir($this->root . "/" . $module)) {
             $entry = $this->root . "/" . $module . "/index.php";
         }
 
-
-        $context = $this->context;
-
-        $inject = function (string $key, $value) use ($context) {
-            $context->$key = $value;
-        };
         $m = require_once($entry);
-
         if ($m instanceof Closure) {
-            $m->call($this, $context, $inject);
+            $m->call($this, $options);
         }
     }
 
