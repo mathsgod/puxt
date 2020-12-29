@@ -35,6 +35,4 @@ return [
             return $this->last_name;
         }
     ]
-
-
 ];
