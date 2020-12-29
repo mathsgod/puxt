@@ -3,10 +3,6 @@
         {
             "type": "composer",
             "url": "https://raymond2.hostlink.com.hk/satis/web"
-        },
-        {
-            "type": "path",
-            "url": "C:\\Users\\maths\\puxt-gql"
         }
     ],
     "description": "PHP framework",
