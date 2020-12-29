@@ -14,6 +14,7 @@ class App
     public $base_path;
     public $document_root;
     public $config = [];
+    public $context;
 
     public function __construct(string $root)
     {
@@ -27,6 +28,8 @@ class App
         $loader = new \Twig\Loader\FilesystemLoader($this->root);
         $this->twig = new \Twig\Environment($loader, ["debug" => true]);
         $this->twig->addExtension(new \Twig_Extensions_Extension_I18n());
+
+        $this->context = new Context;
     }
 
     private function getTextDomain(string $path)
@@ -104,19 +107,13 @@ class App
             $request_path = "error";
         }
 
-        if ($request_path == "") {
-            $request_path = "index";
-        }
 
         $route = new Route();
         $route->path = $request_path;
         $route->params =  new stdClass;
 
-        $this->context = new Context;
-        //$context->app = $app;
         $this->context->route = $route;
         $this->context->params = $route->params;
-
 
         //i18n process
         if ($i18n = $this->config["i18n"]) {
@@ -149,7 +146,6 @@ class App
         foreach ($modules as $module) {
             $this->loadModule($module);
         }
-
 
         $this->render($this->context->route->path);
     }
@@ -190,11 +186,6 @@ class App
         foreach ($head["script"] as $script) {
             $html[] = (string)html("script")->attr($script);
         }
-
-
-
-
-
         return implode("\n", $html);
     }
 
@@ -205,13 +196,18 @@ class App
             $request_path = substr($request_path, 1);
         }
 
-        $data = [
-            "head" => $this->config["head"]
-        ];
+        if ($request_path == "") {
+            $request_path = "index";
+        }
 
+        $head = $this->config["head"] ?? [];
+        if ($this->context->i18n) {
+            $head["base"] = ["href" => "/" . $this->context->i18n->language . "/"];
+        }
         $context = $this->context;
 
 
+        //dynamic route
         if (count(glob($this->root . "/pages/" . $request_path . ".*")) == 0) {
 
             $path_path = explode("/", $request_path);
@@ -284,7 +280,7 @@ class App
             }
         }
 
-
+        //error page handle
         $page = "pages/" . $request_path;
         $pages = glob($this->root . "/" . $page . ".*");
 
@@ -297,8 +293,13 @@ class App
             }
         }
 
-
         $page_loader = new Loader($page, $this, $context);
+
+        if($this->request->getMethod()=="POST"){
+            $page_loader->processPost();
+
+            exit;
+        }
 
         $layout = "layouts/" . ($page_loader->layout ?? "default");
         $layouts = glob($this->root . "/" . $layout . ".*");
@@ -315,7 +316,7 @@ class App
                 $m->call($this, $context);
 
                 if ($context->_redirected) {
-                    $this->render($context->_redirected_url);
+                    header("location: $context->_redirected_url");
                     return;
                 }
             }
@@ -328,14 +329,14 @@ class App
                 $m->call($this, $context);
 
                 if ($context->_redirected) {
-                    $this->render($context->_redirected_url);
+                    header("location: $context->_redirected_url");
                     return;
                 }
             }
         }
 
         $layout_loader->processCreated();
-        $head = $layout_loader->getHead($this->config["head"] ?? []);
+        $head = $layout_loader->getHead($head);
 
         $page_loader->processCreated();
 

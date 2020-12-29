@@ -162,4 +162,12 @@ class Loader
         }
         return $ret;
     }
+
+    public function processPost()
+    {
+        $post = $this->stub["post"];
+        if ($post instanceof Closure) {
+            $post->call($this->view, $this->context);
+        }
+    }
 }

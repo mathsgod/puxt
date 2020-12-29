@@ -8,11 +8,11 @@
     "packages": [
         {
             "name": "mathsgod/html",
-            "version": "1.0.13",
+            "version": "1.0.14",
             "source": {
                 "type": "git",
-                "url": "https://mathsgod:d97ca44a017f09f662c0761828b0f66caf373415@github.com/mathsgod/html.git",
-                "reference": "c0ee7459aeef468e988b48b8f4bf3e7774c9f6c5"
+                "url": "https://mathsgod:5879a4a06aff3c4fd1ee823c09b3ff353661c922@github.com/mathsgod/html.git",
+                "reference": "10d557f96a2720d499cc42ac8ef4adb3bad47f23"
             },
             "type": "library",
             "autoload": {
@@ -34,7 +34,7 @@
                     "homepage": "https://raymond.hostlink.com.hk"
                 }
             ],
-            "time": "2020-12-23T04:56:57+00:00"
+            "time": "2020-12-29T03:04:12+00:00"
         },
         {
             "name": "mathsgod/php-psr7",
@@ -723,8 +723,14 @@
             "version": "1.0.3",
             "source": {
                 "type": "git",
-                "url": "https://mathsgod:d97ca44a017f09f662c0761828b0f66caf373415@github.com/mathsgod/r-translate.git",
+                "url": "https://github.com/mathsgod/r-translate.git",
                 "reference": "bdba467edfd197091e21635c4e0962f05bd1712f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/mathsgod/r-translate/zipball/bdba467edfd197091e21635c4e0962f05bd1712f",
+                "reference": "bdba467edfd197091e21635c4e0962f05bd1712f",
+                "shasum": ""
             },
             "require-dev": {
                 "phpunit/phpunit": "*"
@@ -742,6 +748,10 @@
                 }
             ],
             "description": "Using google translate to translate word",
+            "support": {
+                "source": "https://github.com/mathsgod/r-translate/tree/1.0.3",
+                "issues": "https://github.com/mathsgod/r-translate/issues"
+            },
             "time": "2020-12-24T08:32:45+00:00"
         },
         {

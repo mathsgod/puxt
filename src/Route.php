@@ -1,6 +1,9 @@
 <?php
 
 namespace PUXT;
-class Route{
-    
+
+class Route
+{
+    public $path;
+    public $params;
 }

@@ -28,8 +28,7 @@ return [
         $this->first_name = "hello";
         $this->last_name = "world";
     },
-    "post" => function ($post) {
-        print_r($post);
+    "post" => function ($context) {
     },
     "methods" => [
         "getLastName" => function () {

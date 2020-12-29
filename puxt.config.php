@@ -2,7 +2,6 @@
 
 return [
     "head" => [
-        "base" => ["href" => "/en/"],
         "title" => "abc",
         "meta" => [
             ["charset" => "utf-8"],
