@@ -595,11 +595,11 @@
         },
         {
             "name": "hostlink/puxt-i18n",
-            "version": "1.0.0",
+            "version": "1.0.1",
             "source": {
                 "type": "git",
                 "url": "https://mathsgod:5879a4a06aff3c4fd1ee823c09b3ff353661c922@github.com/HostLink/puxt-i18n.git",
-                "reference": "d5bb4b9929e0e533c4d91765e438a991a7f15946"
+                "reference": "9457b0cb80c5a0ae2079bfd95cd2a31e75d33028"
             },
             "require": {
                 "gettext/gettext": "^4.8",
@@ -615,7 +615,7 @@
                 }
             ],
             "description": "translation module for puxt",
-            "time": "2020-12-28T07:30:19+00:00"
+            "time": "2020-12-28T09:05:56+00:00"
         },
         {
             "name": "mathsgod/data-structure",

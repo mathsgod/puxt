@@ -39,6 +39,6 @@ return [
     ],
     "modules" => [
         "hostlink/puxt-db",
-        "hostlink/puxt-i18n"
+        ["hostlink/puxt-i18n", ["username" => "admin", "password" => "111111"]]
     ]
 ];

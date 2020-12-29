@@ -118,6 +118,18 @@ class App
         $this->context->params = $route->params;
 
 
+        //i18n process
+        if ($i18n = $this->config["i18n"]) {
+            $this->context->i18n->locale = $i18n["defaultLocale"];
+
+            $paths = explode("/", $this->context->route->path);
+            if (in_array($paths[0], $i18n["locales"])) {
+                $this->context->i18n->locale = array_shift($paths);
+                $this->context->route->path = implode("/", $paths);
+            }
+        }
+
+
         //modules
         $modules = $this->config["modules"] ?? [];
         foreach ($modules as $module) {
