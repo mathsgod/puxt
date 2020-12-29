@@ -118,7 +118,14 @@ class App
         //i18n process
         if ($i18n = $this->config["i18n"]) {
             $this->context->i18n->locale = $i18n["defaultLocale"];
-
+            $this->context->i18n->language = $i18n["defaultLocale"];
+            if ($i18n["locale_language_mapping"]) {
+                foreach ($i18n["locale_language_mapping"] as $locale => $language) {
+                    if ($this->context->i18n->locale == $locale) {
+                        $this->context->i18n->language = $language;
+                    }
+                }
+            }
 
             $languages = $i18n["locales"];
             if ($i18n["locale_language_mapping"]) {
@@ -129,7 +136,6 @@ class App
             if (in_array($paths[0], $languages)) {
                 $this->context->i18n->language = array_shift($paths);
                 $this->context->route->path = implode("/", $paths);
-
                 if ($i18n["locale_language_mapping"]) {
                     foreach ($i18n["locale_language_mapping"] as $locale => $language) {
                         if ($this->context->i18n->language == $language) {
@@ -139,6 +145,7 @@ class App
                 }
             }
         }
+
 
 
         //modules
@@ -288,14 +295,14 @@ class App
             if ($request_path == "error") { //error page not found,load default
                 $page = "vendor/mathsgod/puxt/pages/error";
             } else {
-                header("location: error");
+                header("location: /error");
                 return;
             }
         }
 
         $page_loader = new Loader($page, $this, $context);
 
-        if($this->request->getMethod()=="POST"){
+        if ($this->request->getMethod() == "POST") {
             $page_loader->processPost();
 
             exit;
