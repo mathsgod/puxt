@@ -3,8 +3,13 @@
         {
             "type": "composer",
             "url": "https://raymond2.hostlink.com.hk/satis/web"
+        },
+        {
+            "type": "path",
+            "url": "C:\\Users\\maths\\puxt-gql"
         }
     ],
+    "description": "PHP framework",
     "name": "mathsgod/puxt",
     "type": "framework",
     "license": "MIT",
@@ -20,6 +25,7 @@
         }
     },
     "require": {
+        "php": "^7.0",
         "twig/twig": "^2.12",
         "mathsgod/php-psr7": "^1.0",
         "mathsgod/html": "^1.0",

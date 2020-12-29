@@ -43,6 +43,11 @@ return [
     ],
     "modules" => [
         "hostlink/puxt-db",
-        ["hostlink/puxt-i18n", ["username" => "admin", "password" => "111111"]]
+        ["hostlink/puxt-i18n", ["username" => "admin", "password" => "111111"]],
+        "hostlink/puxt-gql"
+    ],
+    "gql" => [
+        "baseURL" => 'http://localhost:4000'
     ]
+
 ];
