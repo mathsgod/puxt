@@ -89,9 +89,9 @@ class Loader
 
     public function getHead(array $head)
     {
-        $h = $this->stub["head"];
+        $h = $this->stub["head"] ?? [];
         if ($h instanceof Closure) {
-            $h = $h->call($this->context, $this->view);
+            $h = $h->call($this->view, $this->context);
         }
 
         if ($h["title"]) {

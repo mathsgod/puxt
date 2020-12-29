@@ -196,8 +196,8 @@ class App
         return implode("\n", $html);
     }
 
-    private function redirect(string $path){
-        
+    private function redirect(string $path)
+    {
     }
 
     public function render(string $request_path)
@@ -216,7 +216,6 @@ class App
             $head["base"] = ["href" => "/" . $this->context->i18n->language . "/"];
         }
         $context = $this->context;
-
 
         //dynamic route
         if (count(glob($this->root . "/pages/" . $request_path . ".*")) == 0) {
@@ -309,13 +308,16 @@ class App
             }
         }
 
+        
+
+        
         $page_loader = new Loader($page, $this, $context);
 
         if ($this->request->getMethod() == "POST") {
             $page_loader->processPost();
-
             exit;
         }
+
 
         $layout = "layouts/" . ($page_loader->layout ?? "default");
         $layouts = glob($this->root . "/" . $layout . ".*");
