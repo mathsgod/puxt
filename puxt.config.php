@@ -2,6 +2,7 @@
 
 return [
     "head" => [
+        "base" => ["href" => "/en/"],
         "title" => "abc",
         "meta" => [
             ["charset" => "utf-8"],
@@ -26,8 +27,12 @@ return [
     ],
 
     "i18n" => [
-        "locales" => ['en', 'fr', 'es'],
-        "defaultLocale" => "en"
+        "locale_language_mapping" => [
+            "en_US" => "en",
+            "zh_HK" => "tc"
+        ],
+        "locales" => ['en_US', 'zh_HK'],
+        "defaultLocale" => "en_US"
     ],
 
     "database" => [

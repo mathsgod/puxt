@@ -122,10 +122,24 @@ class App
         if ($i18n = $this->config["i18n"]) {
             $this->context->i18n->locale = $i18n["defaultLocale"];
 
+
+            $languages = $i18n["locales"];
+            if ($i18n["locale_language_mapping"]) {
+                $languages = array_values($i18n["locale_language_mapping"]);
+            }
+
             $paths = explode("/", $this->context->route->path);
-            if (in_array($paths[0], $i18n["locales"])) {
-                $this->context->i18n->locale = array_shift($paths);
+            if (in_array($paths[0], $languages)) {
+                $this->context->i18n->language = array_shift($paths);
                 $this->context->route->path = implode("/", $paths);
+
+                if ($i18n["locale_language_mapping"]) {
+                    foreach ($i18n["locale_language_mapping"] as $locale => $language) {
+                        if ($this->context->i18n->language == $language) {
+                            $this->context->i18n->locale = $locale;
+                        }
+                    }
+                }
             }
         }
 
@@ -156,6 +170,10 @@ class App
     private function generateHeader(array $head)
     {
         $html = [];
+        if ($head["base"]) {
+            $html[] = (string)html("base")->attr($head["base"]);
+        }
+
         if ($head["title"]) {
             $html[] = "<title>" . htmlentities($head['title']) . "</title>";
         }
@@ -172,6 +190,9 @@ class App
         foreach ($head["script"] as $script) {
             $html[] = (string)html("script")->attr($script);
         }
+
+
+
 
 
         return implode("\n", $html);
