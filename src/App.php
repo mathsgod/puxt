@@ -196,6 +196,10 @@ class App
         return implode("\n", $html);
     }
 
+    private function redirect(string $path){
+        
+    }
+
     public function render(string $request_path)
     {
 
@@ -295,7 +299,12 @@ class App
             if ($request_path == "error") { //error page not found,load default
                 $page = "vendor/mathsgod/puxt/pages/error";
             } else {
-                header("location: /error");
+                if ($this->context->i18n->language) {
+                    header("location: /{$this->context->i18n->language}/error");
+                } else {
+                    header("location: /error");
+                }
+
                 return;
             }
         }
