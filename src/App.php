@@ -30,6 +30,7 @@ class App
         $this->twig->addExtension(new \Twig_Extensions_Extension_I18n());
 
         $this->context = new Context;
+        $this->context->config = $this->config;
     }
 
     private function getTextDomain(string $path)
@@ -308,9 +309,9 @@ class App
             }
         }
 
-        
 
-        
+
+
         $page_loader = new Loader($page, $this, $context);
 
         if ($this->request->getMethod() == "POST") {
