@@ -309,9 +309,6 @@ class App
             }
         }
 
-
-
-
         $page_loader = new Loader($page, $this, $context);
 
         if ($this->request->getMethod() == "POST") {
