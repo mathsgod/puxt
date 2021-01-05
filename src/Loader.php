@@ -169,7 +169,7 @@ class Loader
     {
         $post = $this->stub["post"];
         if ($post instanceof Closure) {
-            $post->call($this->view, $this->context);
+            return $post->call($this->view, $this->context);
         }
     }
 }
