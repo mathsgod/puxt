@@ -1,0 +1,12 @@
+hello, view client
+{{_params.id}}
+
+<hr/>
+{% trans 'about us' %}
+<hr/>
+<ol>
+    {% for key, value in _context  %}
+      <li>{{ key }}</li>
+    {% endfor %}
+  </ol>
+

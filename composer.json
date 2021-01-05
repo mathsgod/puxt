@@ -1,0 +1,34 @@
+{
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://raymond2.hostlink.com.hk/satis/web"
+        }
+    ],
+    "description": "PHP framework",
+    "name": "mathsgod/puxt",
+    "type": "framework",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Raymond Chong",
+            "email": "mathsgod@yahoo.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "PUXT\\": "src"
+        }
+    },
+    "require": {
+        "php": "^7.0",
+        "twig/twig": "^2.12",
+        "mathsgod/php-psr7": "^1.0",
+        "mathsgod/html": "^1.0",
+        "twig/extensions": "^1.5"
+    },
+    "require-dev": {
+        "hostlink/puxt-db": "^1.0",
+        "hostlink/puxt-i18n": "^1.0"
+    }
+}
