@@ -142,9 +142,7 @@ class Loader
         $data["puxt"] = $puxt;
         $data["_params"] = $this->context->params;
         $data["_route"] = $this->context->route;
-        //        $data["_context"] = $this->context;
-        //$data["_context"] = "abc";
-
+        $data["_config"] = $this->context->config;
 
 
         try {
