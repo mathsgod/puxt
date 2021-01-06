@@ -143,6 +143,10 @@ class Loader
         $data["_params"] = $this->context->params;
         $data["_route"] = $this->context->route;
         $data["_config"] = $this->context->config;
+        if ($this->context->i18n) {
+            $data["_i18n"] = $this->context->i18n;
+        }
+
 
 
         try {
