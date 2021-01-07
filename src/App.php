@@ -73,18 +73,17 @@ class App
             $module = $module[0];
         }
 
-        if (is_dir($this->root . "/vendor/" . $module)) {
-            $entry = $this->root . "/vendor/"  . $module . "/index.php";
+        if (is_dir($dir = $this->root .  DIRECTORY_SEPARATOR . "vendor" . DIRECTORY_SEPARATOR . $module)) {
+            $entry = $dir . DIRECTORY_SEPARATOR . "index.php";
         }
 
-        if (is_dir($this->root . "/" . $module)) {
-            $entry = $this->root . "/" . $module . "/index.php";
+        if (is_dir($dir = $this->root . DIRECTORY_SEPARATOR . $module)) {
+            $entry = $dir . DIRECTORY_SEPARATOR . "index.php";
         }
 
         if (!$entry) {
             echo "Module: $module not found";
         }
-
 
         $m = require_once($entry);
         if ($m instanceof Closure) {

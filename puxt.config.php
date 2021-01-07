@@ -42,13 +42,24 @@ return [
         "database" => "raymond",
     ],
     "modules" => [
-        "hostlink/puxt-db",
-        "hostlink/puxt-i18n"
-//        ["hostlink/puxt-i18n", ["username" => "admin", "password" => "111111"]],
+        //"hostlink/puxt-db",
+       // "hostlink/puxt-i18n",
+        "hostlink/puxt-log",
+        //        ["hostlink/puxt-i18n", ["username" => "admin", "password" => "111111"]],
         //"hostlink/puxt-gql"
     ],
     "gql" => [
         "baseURL" => 'http://localhost:4000'
+    ],
+    "log" => [
+        "name" => "puxt",
+        "handler" => [
+            [
+                "stream" => __DIR__ . "/log/" . date("Y-m-d") . ".log",
+                "level" => Monolog\Logger::INFO
+            ]
+        ]
+
     ]
 
 ];

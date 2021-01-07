@@ -29,6 +29,7 @@
     },
     "require-dev": {
         "hostlink/puxt-db": "^1.0",
-        "hostlink/puxt-i18n": "^1.0"
+        "hostlink/puxt-i18n": "^1.0",
+        "hostlink/puxt-log": "^1.0"
     }
 }

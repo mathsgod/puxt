@@ -23,10 +23,13 @@ return [
             "last_name" => "chong"
         ];
     },
-    "created" => function () {
+    "created" => function ($context) {
         //created
         $this->first_name = "hello";
         $this->last_name = "world";
+
+
+        $context->log->info("hello");
     },
     "post" => function ($context) {
     },
