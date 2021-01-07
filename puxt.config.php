@@ -43,13 +43,14 @@ return [
     ],
     "modules" => [
         //"hostlink/puxt-db",
-       // "hostlink/puxt-i18n",
-        "hostlink/puxt-log",
+        //      "hostlink/puxt-log",
+        // "hostlink/puxt-i18n",
+
         //        ["hostlink/puxt-i18n", ["username" => "admin", "password" => "111111"]],
-        //"hostlink/puxt-gql"
+        "hostlink/puxt-gql"
     ],
     "gql" => [
-        "baseURL" => 'http://localhost:4000'
+        "baseURL" => 'https://isapi.hostlink.com.hk:8888/v3/'
     ],
     "log" => [
         "name" => "puxt",
