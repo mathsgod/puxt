@@ -2,7 +2,7 @@
 
 namespace PUXT;
 
-class View
+class Component
 {
     public $_methods = [];
 

@@ -16,7 +16,7 @@ class Loader
     public $stub;
     public $twig_content = "";
     public $layout;
-    public $view;
+    public $component;
     public $middleware;
 
     public function __construct(string $path, $app, Context $context, $head = [])
@@ -25,7 +25,7 @@ class Loader
         $this->app = $app;
         $this->context = $context;
 
-        $this->view = new View();
+        $this->component = new Component();
 
         if (file_exists($file = $this->path . ".php")) {
 
@@ -34,21 +34,23 @@ class Loader
             $this->twig_content = ob_get_contents();
             ob_end_clean();
 
-
-
             $this->layout = $this->stub["layout"];
-
-            $data = $this->exec($this->stub["data"], $this);
-
-            foreach ($data as $k => $v) {
-                $this->view->$k = $v;
-            }
 
             if ($this->stub["methods"]) {
                 foreach ($this->stub["methods"] as $name => $method) {
-                    $this->view->_methods[$name] = Closure::bind($method, $this->view, View::class);
+                    $this->component->_methods[$name] = Closure::bind($method, $this->component, Component::class);
                 }
             }
+
+            $data = $this->stub["data"];
+            if ($data instanceof Closure) {
+                $data->call($this->component, $this->context);
+            }
+            foreach ($data as $k => $v) {
+                $this->component->$k = $v;
+            }
+
+
 
             $this->middleware = $this->stub["middleware"] ?? [];
         }
@@ -59,7 +61,7 @@ class Loader
         //created
         $created = $this->stub["created"];
         if ($created instanceof Closure) {
-            $created->call($this->view, $this->context);
+            $created->call($this->component, $this->context);
         }
     }
 
@@ -78,20 +80,11 @@ class Loader
         }
     }
 
-    private function exec($stub, $context = null)
-    {
-        if ($stub instanceof Closure) {
-            return $stub->call($context);
-        }
-
-        return $stub;
-    }
-
     public function getHead(array $head)
     {
         $h = $this->stub["head"] ?? [];
         if ($h instanceof Closure) {
-            $h = $h->call($this->view, $this->context);
+            $h = $h->call($this->component, $this->context);
         }
 
         if ($h["title"]) {
@@ -138,7 +131,7 @@ class Loader
 
     public function render($puxt)
     {
-        $data = (array)$this->view;
+        $data = (array)$this->component;
         $data["puxt"] = $puxt;
         $data["_params"] = $this->context->params;
         $data["_route"] = $this->context->route;
@@ -146,8 +139,6 @@ class Loader
         if ($this->context->i18n) {
             $data["_i18n"] = $this->context->i18n;
         }
-
-
 
         try {
             if (file_exists($this->path . ".twig")) {
@@ -171,7 +162,7 @@ class Loader
     {
         $post = $this->stub["post"];
         if ($post instanceof Closure) {
-            return $post->call($this->view, $this->context);
+            return $post->call($this->component, $this->context);
         }
     }
 }

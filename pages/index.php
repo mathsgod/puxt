@@ -17,7 +17,7 @@ return [
             ]
         ];
     },
-    "data" => function () {
+    "data" => function ($context) {
         return [
             "first_name" => "raymond",
             "last_name" => "chong"
