@@ -74,10 +74,11 @@ class App
         }
 
         if (is_dir($dir = $this->root .  DIRECTORY_SEPARATOR . "vendor" . DIRECTORY_SEPARATOR . $module)) {
+            
             $entry = $dir . DIRECTORY_SEPARATOR . "index.php";
         }
 
-        if (is_dir($dir = $this->root . DIRECTORY_SEPARATOR . $module)) {
+        if (is_dir($dir = $this->root . DIRECTORY_SEPARATOR . "modules" . DIRECTORY_SEPARATOR . $module)) {
             $entry = $dir . DIRECTORY_SEPARATOR . "index.php";
         }
 
@@ -114,6 +115,8 @@ class App
 
         $this->context->route = $route;
         $this->context->params = $route->params;
+
+
 
         //i18n process
         if ($i18n = $this->config["i18n"]) {

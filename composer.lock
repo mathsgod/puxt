@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "84db888e0df5db82caede47aa0171e8b",
+    "content-hash": "d52b4964d63ebdd02bde26ef77991cf7",
     "packages": [
         {
             "name": "mathsgod/html",
@@ -888,6 +888,38 @@
                 "source": "https://github.com/HostLink/puxt-log/tree/1.0.0"
             },
             "time": "2021-01-07T03:03:10+00:00"
+        },
+        {
+            "name": "hostlink/puxt-vue-loader",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/HostLink/puxt-vue-loader.git",
+                "reference": "95170278914259f1a1f35996c9f4f33c8fc3e3ba"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/HostLink/puxt-vue-loader/zipball/95170278914259f1a1f35996c9f4f33c8fc3e3ba",
+                "reference": "95170278914259f1a1f35996c9f4f33c8fc3e3ba",
+                "shasum": ""
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Raymond Chong",
+                    "email": "mathsgod@yahoo.com"
+                }
+            ],
+            "description": "A vue loader for puxt",
+            "support": {
+                "issues": "https://github.com/HostLink/puxt-vue-loader/issues",
+                "source": "https://github.com/HostLink/puxt-vue-loader/tree/1.0.0"
+            },
+            "time": "2021-01-07T06:15:27+00:00"
         },
         {
             "name": "mathsgod/data-structure",

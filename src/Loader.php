@@ -140,6 +140,16 @@ class Loader
             $data["_i18n"] = $this->context->i18n;
         }
 
+        if (file_exists($this->path . ".vue")) {
+            $path = $this->app->base_path . "_vue/" . $this->context->route->path;
+
+            $twig_loader = new \Twig\Loader\ArrayLoader([
+                'vue' => file_get_contents(dirname(__DIR__) . "/vue.twig"),
+            ]);
+            $twig = new \Twig\Environment($twig_loader, ["debug" => true]);
+            return  $twig->render("vue", ["path" => $path]);
+        }
+
         try {
             if (file_exists($this->path . ".twig")) {
                 $twig = $this->app->twig->load($this->path . ".twig");
