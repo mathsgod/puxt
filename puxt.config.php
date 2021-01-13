@@ -47,7 +47,8 @@ return [
         // "hostlink/puxt-i18n",
         //["hostlink/puxt-i18n", ["username" => "admin", "password" => "111111"]],
         //"hostlink/puxt-gql"
-        //"hostlink/puxt-vue-loader"
+        //"hostlink/puxt-vue-loader",
+        //"hostlink/puxt-content"
     ],
     "gql" => [
         "baseURL" => 'https://isapi.hostlink.com.hk:8888/v3/'

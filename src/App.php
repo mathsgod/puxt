@@ -5,6 +5,7 @@ namespace PUXT;
 use Closure;
 use Exception;
 use PHP\Psr7\ServerRequest;
+use RuntimeException;
 use stdClass;
 
 class App
@@ -74,7 +75,7 @@ class App
         }
 
         if (is_dir($dir = $this->root .  DIRECTORY_SEPARATOR . "vendor" . DIRECTORY_SEPARATOR . $module)) {
-            
+
             $entry = $dir . DIRECTORY_SEPARATOR . "index.php";
         }
 
@@ -357,12 +358,21 @@ class App
             }
         }
 
-        $layout_loader->processCreated();
-        $head = $layout_loader->getHead($head);
+        try {
+            $layout_loader->processCreated();
 
-        $page_loader->processCreated();
+            $head = $layout_loader->getHead($head);
 
-        $head = $page_loader->getHead($head);
+            $page_loader->processCreated();
+
+            $head = $page_loader->getHead($head);
+            
+        } catch (Exception $e) {
+            throw new RuntimeException($e->getMessage());
+            echo $e->getMessage();
+            die();
+        }
+
 
 
         if ($this->context->i18n) {

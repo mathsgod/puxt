@@ -28,7 +28,7 @@ return [
         $this->first_name = "hello";
         $this->last_name = "world";
 
-        //  $context->log->info("hello");
+        print_r($context->content('hello')->fetch());
     },
     "post" => function ($context) {
     },
