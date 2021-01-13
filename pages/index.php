@@ -28,7 +28,7 @@ return [
         $this->first_name = "hello";
         $this->last_name = "world";
 
-        print_r($context->content('hello')->fetch());
+        print_r($context->content('hello')->only("hello")->fetch());
     },
     "post" => function ($context) {
     },

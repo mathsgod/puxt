@@ -3,6 +3,10 @@
         {
             "type": "composer",
             "url": "https://raymond2.hostlink.com.hk/satis/web"
+        },
+        {
+            "type": "path",
+            "url": "../puxt-content"
         }
     ],
     "description": "PHP framework",
@@ -25,7 +29,8 @@
         "twig/twig": "^2.12",
         "mathsgod/php-psr7": "^1.0",
         "mathsgod/html": "^1.0",
-        "twig/extensions": "^1.5"
+        "twig/extensions": "^1.5",
+        "hostlink/puxt-content": "dev-master"
     },
     "require-dev": {
         "hostlink/puxt-db": "^1.0",
