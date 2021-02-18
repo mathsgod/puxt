@@ -89,6 +89,17 @@ class Loader
                 $this->component->$name = intval($default);
             } elseif ($type == "float") {
                 $this->component->$name = floatval($default);
+            } elseif ($type == "object") {
+                $this->component->$name = $default;
+                if ($default instanceof Closure) {
+                    $this->component->$name = $default->call($this->context);
+                }
+            } elseif ($type == "array") {
+                $this->component->$name = $default;
+                if ($default instanceof Closure) {
+                    $this->component->$name = $default->call($this->context);
+                }
+                $this->component->$name = array_values($this->component->$name);
             }
         }
     }
