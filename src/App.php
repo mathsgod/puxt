@@ -117,8 +117,6 @@ class App
         $this->context->route = $route;
         $this->context->params = $route->params;
 
-
-
         //i18n process
         if ($i18n = $this->config["i18n"]) {
             $this->context->i18n->locale = $i18n["defaultLocale"];
@@ -345,7 +343,6 @@ class App
             }
         }
 
-
         foreach ($page_loader->middleware as $middleware) {
             $m = require_once($this->root . "/middleware/$middleware.php");
             if ($m instanceof Closure) {
@@ -363,12 +360,13 @@ class App
 
             $head = $layout_loader->getHead($head);
 
+            $page_loader->processProps();
             $page_loader->processCreated();
 
+
             $head = $page_loader->getHead($head);
-            
         } catch (Exception $e) {
-            throw new RuntimeException($e->getMessage());
+            //throw new RuntimeException($e->getMessage());
             echo $e->getMessage();
             die();
         }

@@ -29,8 +29,7 @@
         "twig/twig": "^2.12",
         "mathsgod/php-psr7": "^1.0",
         "mathsgod/html": "^1.0",
-        "twig/extensions": "^1.5",
-        "hostlink/puxt-content": "dev-master"
+        "twig/extensions": "^1.5"
     },
     "require-dev": {
         "hostlink/puxt-db": "^1.0",

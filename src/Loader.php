@@ -56,6 +56,43 @@ class Loader
         }
     }
 
+    public function processProps()
+    {
+        //props
+        $props = $this->stub["props"];
+        foreach ($props as $name => $value) {
+
+
+            $type = $value;
+            $default = "";
+            $required = false;
+
+            if (is_array($value)) {
+                $type = $value["type"];
+                $default = $value["default"];
+                $required = (bool) $value["required"];
+            }
+
+
+            if ($required && !isset($_GET[$name])) {
+                throw new Exception("props [$name] is required");
+            }
+
+
+            if (isset($_GET[$name])) {
+                $default = $_GET[$name];
+            }
+
+            if ($type == "string") {
+                $this->component->$name = (string)$default;
+            } elseif ($type == "int") {
+                $this->component->$name = intval($default);
+            } elseif ($type == "float") {
+                $this->component->$name = floatval($default);
+            }
+        }
+    }
+
     public function processCreated()
     {
         //created

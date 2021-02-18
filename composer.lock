@@ -4,36 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "32e2ce7072187005f3fba0ebb0e4f5cf",
+    "content-hash": "e36d9bf9810eecedb40e69b500d4a4af",
     "packages": [
-        {
-            "name": "hostlink/puxt-content",
-            "version": "dev-master",
-            "dist": {
-                "type": "path",
-                "url": "../puxt-content",
-                "reference": "ad974f9d0115982541b3b1924db1d4a5df031aa9"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "PUXT\\": "src/"
-                }
-            },
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Raymond Chong",
-                    "email": "mathsgod@yahoo.com"
-                }
-            ],
-            "description": "A content module for puxt",
-            "transport-options": {
-                "relative": true
-            }
-        },
         {
             "name": "mathsgod/html",
             "version": "1.0.14",
@@ -1692,9 +1664,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "hostlink/puxt-content": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
