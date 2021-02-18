@@ -313,6 +313,7 @@ class App
         $page_loader = new Loader($page, $this, $context);
 
         if ($this->request->getMethod() == "POST") {
+            $page_loader->processProps();
             $ret = $page_loader->processPost();
             if (is_array($ret)) {
                 header("Content-type: application/json");
