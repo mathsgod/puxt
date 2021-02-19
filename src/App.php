@@ -365,12 +365,10 @@ class App
 
             if ($this->request->getMethod() == "GET") {
                 $ret = $page_loader->processGet();
-                if ($ret !== false) {
-                    if (is_array($ret)) {
-                        header("Content-type: application/json");
-                        echo json_encode($ret, JSON_UNESCAPED_UNICODE);
-                        die();
-                    }
+                if (is_array($ret)) {
+                    header("Content-type: application/json");
+                    echo json_encode($ret, JSON_UNESCAPED_UNICODE);
+                    die();
                 }
             }
 

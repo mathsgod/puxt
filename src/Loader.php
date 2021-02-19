@@ -119,7 +119,6 @@ class Loader
         if ($get instanceof Closure) {
             return $get->call($this->component, $this->context);
         }
-        return false;
     }
 
     public function post(array $body = [])

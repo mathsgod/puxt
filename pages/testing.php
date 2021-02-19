@@ -1,6 +1,12 @@
 <?php
 
 return [
+    "props" => [
+        "b" => [
+            "type" => "string",
+            "default" => 1
+        ]
+    ],
     "head" => function () {
 
         return  [
@@ -16,10 +22,12 @@ return [
     },
     "created" => function () {
         //  $this
+        echo "create";
 
         $this->title = "xyz";
     }, "post" => function () {
     }, "get" => function () {
-        return ["a" => 1];
+        echo "get";
+  //      return ["a" => 1, "b" => $this->b];
     }
 ];
