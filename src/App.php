@@ -322,7 +322,6 @@ class App
             exit;
         }
 
-
         $layout = "layouts/" . ($page_loader->layout ?? "default");
         $layouts = glob($this->root . "/" . $layout . ".*");
         if (count($layouts) == 0) { //layout not found
@@ -363,6 +362,16 @@ class App
 
             $page_loader->processProps();
             $page_loader->processCreated();
+
+            if ($this->request->getMethod() == "GET") {
+                $ret = $page_loader->processGet();
+                if ($ret !== false) {
+                    if (is_array($ret)) {
+                        header("Content-type: application/json");
+                        echo json_encode($ret);
+                    }
+                }
+            }
 
 
             $head = $page_loader->getHead($head);

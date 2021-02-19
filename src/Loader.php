@@ -113,6 +113,15 @@ class Loader
         }
     }
 
+    public function processGet()
+    {
+        $get = $this->stub["get"];
+        if ($get instanceof Closure) {
+            return $get->call($this->component, $this->context);
+        }
+        return false;
+    }
+
     public function post(array $body = [])
     {
         if (file_exists($this->path . ".php")) {
