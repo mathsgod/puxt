@@ -4,6 +4,7 @@ namespace PUXT;
 
 use Closure;
 use Exception;
+use JsonSerializable;
 use PHP\Psr7\ServerRequest;
 use RuntimeException;
 use stdClass;
@@ -365,7 +366,7 @@ class App
 
             if ($this->request->getMethod() == "GET") {
                 $ret = $page_loader->processGet();
-                if (is_array($ret)) {
+                if (is_array($ret) || $ret instanceof JsonSerializable) {
                     header("Content-type: application/json");
                     echo json_encode($ret, JSON_UNESCAPED_UNICODE);
                     die();
