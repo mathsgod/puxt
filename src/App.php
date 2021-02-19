@@ -368,7 +368,8 @@ class App
                 if ($ret !== false) {
                     if (is_array($ret)) {
                         header("Content-type: application/json");
-                        echo json_encode($ret);
+                        echo json_encode($ret, JSON_UNESCAPED_UNICODE);
+                        die();
                     }
                 }
             }

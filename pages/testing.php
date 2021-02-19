@@ -19,6 +19,7 @@ return [
 
         $this->title = "xyz";
     }, "post" => function () {
-        
+    }, "get" => function () {
+        return ["a" => 1];
     }
 ];
