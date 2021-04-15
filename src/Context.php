@@ -5,15 +5,15 @@ namespace PUXT;
 use Closure;
 use Exception;
 
+/**
+ * @property Route $route
+ */
 class Context
 {
     public $params;
     public $_redirected = false;
     public $_redirected_url;
 
-    /**
-     * @property Route $route
-     */
     public $route = null;
 
     public function redirect(string $url)
