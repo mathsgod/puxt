@@ -201,17 +201,29 @@ class App
 
     private function redirect(string $path)
     {
+        $location = $this->base_path;
+
+        if ($this->context->i18n->language) {
+            $location .= $this->context->i18n->language . "/";
+        }
+
+        $location .= $path;
+
+        header("location: $location");
     }
 
     public function render(string $request_path)
     {
+        if ($request_path == "") {
+            $request_path = "index";
+        }
+
+        if (substr($request_path, -1) == "/") {
+            $request_path .=  "index";
+        }
 
         if (substr($request_path, 0, 1) == "/") {
             $request_path = substr($request_path, 1);
-        }
-
-        if ($request_path == "") {
-            $request_path = "index";
         }
 
         $head = $this->config["head"] ?? [];
@@ -297,19 +309,27 @@ class App
         $page = "pages/" . $request_path;
         $pages = glob($this->root . "/" . $page . ".*");
 
+
+        if (count($pages) == 0) {
+            $pages = glob($this->root . "/$page/index.*");
+
+            if (count($pages) != 0) {
+                $this->redirect("$request_path/");
+                return;
+            }
+        }
+
+
+
         if (count($pages) == 0) { //page not found
             if ($request_path == "error") { //error page not found,load default
                 $page = "vendor/mathsgod/puxt/pages/error";
             } else {
-                if ($this->context->i18n->language) {
-                    header("location: /{$this->context->i18n->language}/error");
-                } else {
-                    header("location: /error");
-                }
-
+                $this->redirect("error");
                 return;
             }
         }
+
 
         $page_loader = new Loader($page, $this, $context);
 

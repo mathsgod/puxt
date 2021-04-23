@@ -1,7 +1,6 @@
 <?php
 
 return [
-    "layout" => "abc",
     "head" => function () {
         return [
             "title" => rand(1, 10),
