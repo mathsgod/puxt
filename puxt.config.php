@@ -42,6 +42,7 @@ return [
         "database" => "raymond",
     ],
     "modules" => [
+        "test"
         //"hostlink/puxt-db",
         //"hostlink/puxt-log",
         // "hostlink/puxt-i18n",

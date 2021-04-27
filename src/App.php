@@ -17,6 +17,9 @@ class App
     public $document_root;
     public $config = [];
     public $context;
+    public $moduleContainer;
+
+    private $_hooks = [];
 
     public function __construct(string $root)
     {
@@ -33,6 +36,11 @@ class App
 
         $this->context = new Context;
         $this->context->config = $this->config;
+
+        $this->moduleContainer = new ModuleContainer($this);
+
+        //module before
+        $this->moduleContainer->ready();
     }
 
     private function getTextDomain(string $path)
@@ -67,32 +75,6 @@ class App
         }
     }
 
-    private function loadModule($module)
-    {
-        $options = [];
-        if (is_array($module)) {
-            $options = $module[1];
-            $module = $module[0];
-        }
-
-        if (is_dir($dir = $this->root .  DIRECTORY_SEPARATOR . "vendor" . DIRECTORY_SEPARATOR . $module)) {
-
-            $entry = $dir . DIRECTORY_SEPARATOR . "index.php";
-        }
-
-        if (is_dir($dir = $this->root . DIRECTORY_SEPARATOR . "modules" . DIRECTORY_SEPARATOR . $module)) {
-            $entry = $dir . DIRECTORY_SEPARATOR . "index.php";
-        }
-
-        if (!$entry) {
-            echo "Module: $module not found";
-        }
-
-        $m = require_once($entry);
-        if ($m instanceof Closure) {
-            $m->call($this, $options);
-        }
-    }
 
     public function run()
     {
@@ -147,17 +129,9 @@ class App
                     }
                 }
             }
-        }
+        };
 
-
-
-        //modules
-        $modules = $this->config["modules"] ?? [];
-        foreach ($modules as $module) {
-            $this->loadModule($module);
-        }
-
-        $this->render($this->context->route->path);
+        $this->render($request_path);
     }
 
     private function generateTagAttr(array $attrs)
@@ -447,5 +421,19 @@ class App
     public function getTemplate(string $file)
     {
         return $this->twig->load($file);
+    }
+
+    public function callHook(string $name, $args)
+    {
+
+        //ready 
+        foreach ($this->_hooks[$name] as $hook) {
+            $hook($args);
+        }
+    }
+
+    public function hook(string $name, callable $fn)
+    {
+        $this->_hooks[$name][] = $fn;
     }
 }
