@@ -41,6 +41,11 @@ class App
 
         //base path
         $this->base_path = dirname($this->request->getServerParams()["SCRIPT_NAME"]);
+        if ($this->base_path == DIRECTORY_SEPARATOR) {
+            $this->base_path = "/";
+        }
+
+
         if (substr($this->base_path, -1) != "/") {
             $this->base_path .= "/";
         }
@@ -56,25 +61,13 @@ class App
 
         $route = new Route();
         $route->path = $request_path;
-        $route->params =  new stdClass;
+        $route->params = $this->request->getQueryParams();
 
         $this->context->route = $route;
         $this->context->params = $route->params;
 
         //module before
         $this->moduleContainer->ready();
-    }
-
-    private function getTextDomain(string $path)
-    {
-
-        $mo = glob($this->root . "/locale/" . $this->context->i18n->locale . "/LC_MESSAGES/" . $path . "-*.mo")[0];
-        if ($mo) {
-            $mo_file = substr($mo, strlen($this->root . "/locale/" . $this->context->i18n->locale . "/LC_MESSAGES/"));
-            $domain = preg_replace('/.[^.]*$/', '', $mo_file);
-            return $domain;
-        }
-        return uniqid();
     }
 
     public function addPlugin(string $path)
@@ -96,7 +89,6 @@ class App
             $m->call($this, $context, $inject);
         }
     }
-
 
     public function run()
     {
@@ -250,7 +242,7 @@ class App
 
         //error page handle
         $page = "pages/" . $request_path;
-        $pages = glob($this->root . "/" . $page . ".*");
+        $pages = glob($this->root . "/$page.*");
 
 
         if (count($pages) == 0) {
@@ -262,8 +254,6 @@ class App
             }
         }
 
-
-
         if (count($pages) == 0) { //page not found
             if ($request_path == "error") { //error page not found,load default
                 $page = "vendor/mathsgod/puxt/pages/error";
@@ -272,7 +262,6 @@ class App
                 return;
             }
         }
-
 
         $page_loader = new Loader($page, $this, $context);
 
@@ -344,23 +333,11 @@ class App
             die();
         }
 
-
-
-        if ($this->context->i18n) {
-            setlocale(LC_ALL, $this->context->i18n->locale);
-            $domain = $this->getTextDomain($page_loader->path);
-            bindtextdomain($domain, $this->root . "/locale");
-            textdomain($domain);
-        }
+        $this->callHook("render:before", $page_loader);
         $puxt = $page_loader->render("");
 
 
-        if ($this->context->i18n) {
-            setlocale(LC_ALL, $this->context->i18n->locale);
-            $domain = $this->getTextDomain($layout_loader->path);
-            bindtextdomain($domain, $this->root . "/locale");
-            textdomain($domain);
-        }
+        $this->callHook("render:before", $layout_loader);
         $app = $layout_loader->render($puxt);
 
 
@@ -394,8 +371,10 @@ class App
 
     public function callHook(string $name, $args)
     {
-        foreach ($this->_hooks[$name] as $hook) {
-            $hook($args);
+        if ($this->_hooks[$name]) {
+            foreach ($this->_hooks[$name] as $hook) {
+                $hook($args);
+            }
         }
     }
 

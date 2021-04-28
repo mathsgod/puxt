@@ -8,6 +8,8 @@ return [
                 "lang" => "zh-hk"
             ],
         ];
+    }, "get" => function ($context) {
+        print_r($context->params);
     }
 
 ];
