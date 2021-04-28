@@ -59,4 +59,9 @@ class ModuleContainer
             $m->call($this, $options);
         }
     }
+
+    public function addLayout(string $template, string $name)
+    {
+        $this->puxt->config["layouts"][$name] = $template;
+    }
 }
