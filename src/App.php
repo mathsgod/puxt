@@ -15,7 +15,12 @@ class App
     public $request;
     public $base_path;
     public $document_root;
-    public $config = [];
+    public $config = [
+        "dir" => [
+            "layouts" => "layouts",
+            "pages" => "pages"
+        ]
+    ];
     public $context;
     public $moduleContainer;
 
@@ -27,7 +32,10 @@ class App
         $this->request = new ServerRequest();
 
         if (file_exists($file = $root . "/puxt.config.php")) {
-            $this->config = require_once($file);
+            $config = require_once($file);
+            foreach ($config as $k => $v) {
+                $this->config[$k] = $v;
+            }
         }
 
         $loader = new \Twig\Loader\FilesystemLoader($this->root);
@@ -131,6 +139,8 @@ class App
         foreach ($head["script"] as $script) {
             $html[] = (string)html("script")->attr($script);
         }
+
+
         return implode("\n", $html);
     }
 
@@ -167,8 +177,10 @@ class App
         }
         $context = $this->context;
 
+
+
         //dynamic route
-        if (count(glob($this->root . "/pages/" . $request_path . ".*")) == 0) {
+        if (count(glob($this->root . "/" . $this->config["dir"]["pages"] . "/" . $request_path . ".*")) == 0) {
 
             $path_path = explode("/", $request_path);
 
@@ -241,7 +253,7 @@ class App
         }
 
         //error page handle
-        $page = "pages/" . $request_path;
+        $page = $this->config["dir"]["pages"] . "/" . $request_path;
         $pages = glob($this->root . "/$page.*");
 
 
@@ -262,7 +274,6 @@ class App
                 return;
             }
         }
-
         $page_loader = new Loader($page, $this, $context);
 
         if ($this->request->getMethod() == "POST") {
@@ -275,15 +286,20 @@ class App
             exit;
         }
 
-        $layout = "layouts/" . ($page_loader->layout ?? "default");
+        $layout = ($page_loader->layout ?? "default");
+        if ($this->config["layouts"][$layout]) {
+            $layout = $this->config["layouts"][$layout];
+        } else {
+            $layout = "layouts/$layout";
+        }
+
         $layouts = glob($this->root . "/" . $layout . ".*");
+
         if (count($layouts) == 0) { //layout not found
             $layout = "vendor/mathsgod/puxt/layouts/default";
         }
 
         $layout_loader = new Loader($layout, $this, $context, $this->config["head"]);
-
-
         foreach ($layout_loader->middleware as $middleware) {
             $m = require_once($this->root . "/middleware/$middleware.php");
             if ($m instanceof Closure) {
@@ -350,6 +366,7 @@ class App
         $data["html_attrs"] = $this->generateTagAttr($head["htmlAttrs"] ?? []);
         $data["head_attrs"] = $this->generateTagAttr($head["headAttrs"] ?? []);
         $data["body_attrs"] = $this->generateTagAttr($head["bodyAttrs"] ?? []);
+
         echo $app_template->render($data);
     }
 
