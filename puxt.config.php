@@ -42,10 +42,10 @@ return [
         "database" => "raymond",
     ],
     "modules" => [
-        "test"
+
         //"hostlink/puxt-db",
         //"hostlink/puxt-log",
-        // "hostlink/puxt-i18n",
+        "hostlink/puxt-i18n",
         //["hostlink/puxt-i18n", ["username" => "admin", "password" => "111111"]],
         //"hostlink/puxt-gql"
         //"hostlink/puxt-vue-loader",

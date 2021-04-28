@@ -39,6 +39,28 @@ class App
 
         $this->moduleContainer = new ModuleContainer($this);
 
+        //base path
+        $this->base_path = dirname($this->request->getServerParams()["SCRIPT_NAME"]);
+        if (substr($this->base_path, -1) != "/") {
+            $this->base_path .= "/";
+        }
+
+        $this->document_root = substr($this->root . "/", 0, -strlen($this->base_path));
+
+        $path = $this->request->getUri()->getPath();
+
+        $request_path = substr($path, strlen($this->base_path));
+        if ($request_path === false) {
+            $request_path = "error";
+        }
+
+        $route = new Route();
+        $route->path = $request_path;
+        $route->params =  new stdClass;
+
+        $this->context->route = $route;
+        $this->context->params = $route->params;
+
         //module before
         $this->moduleContainer->ready();
     }
@@ -78,60 +100,7 @@ class App
 
     public function run()
     {
-        //base path
-        $this->base_path = dirname($this->request->getServerParams()["SCRIPT_NAME"]);
-        if (substr($this->base_path, -1) != "/") {
-            $this->base_path .= "/";
-        }
-
-        $this->document_root = substr($this->root . "/", 0, -strlen($this->base_path));
-        $path = $this->request->getUri()->getPath();
-
-        $request_path = substr($path, strlen($this->base_path));
-        if ($request_path === false) {
-            $request_path = "error";
-        }
-
-
-        $route = new Route();
-        $route->path = $request_path;
-        $route->params =  new stdClass;
-
-        $this->context->route = $route;
-        $this->context->params = $route->params;
-
-        //i18n process
-        if ($i18n = $this->config["i18n"]) {
-            $this->context->i18n->locale = $i18n["defaultLocale"];
-            $this->context->i18n->language = $i18n["defaultLocale"];
-            if ($i18n["locale_language_mapping"]) {
-                foreach ($i18n["locale_language_mapping"] as $locale => $language) {
-                    if ($this->context->i18n->locale == $locale) {
-                        $this->context->i18n->language = $language;
-                    }
-                }
-            }
-
-            $languages = $i18n["locales"];
-            if ($i18n["locale_language_mapping"]) {
-                $languages = array_values($i18n["locale_language_mapping"]);
-            }
-
-            $paths = explode("/", $this->context->route->path);
-            if (in_array($paths[0], $languages)) {
-                $this->context->i18n->language = array_shift($paths);
-                $this->context->route->path = implode("/", $paths);
-                if ($i18n["locale_language_mapping"]) {
-                    foreach ($i18n["locale_language_mapping"] as $locale => $language) {
-                        if ($this->context->i18n->language == $language) {
-                            $this->context->i18n->locale = $locale;
-                        }
-                    }
-                }
-            }
-        };
-
-        $this->render($request_path);
+        $this->render($this->context->route->path);
     }
 
     private function generateTagAttr(array $attrs)
@@ -425,8 +394,6 @@ class App
 
     public function callHook(string $name, $args)
     {
-
-        //ready 
         foreach ($this->_hooks[$name] as $hook) {
             $hook($args);
         }
