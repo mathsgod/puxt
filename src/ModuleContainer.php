@@ -29,6 +29,24 @@ class ModuleContainer
         $this->puxt->callHook("ready", $this->puxt);
     }
 
+    public function addPlugin(string $path)
+    {
+
+        if (!file_exists($path)) return;
+
+        $m = require_once($path);
+
+
+        if ($m instanceof Closure) {
+
+            $context = $this->puxt->context;
+            $inject = function (string $key, $value) use ($context) {
+                $context->$key = $value;
+            };
+            $m->call($this, $context, $inject);
+        }
+    }
+
     public function addModule($module)
     {
         $options = [];

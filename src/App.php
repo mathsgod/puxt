@@ -78,26 +78,6 @@ class App
         $this->moduleContainer->ready();
     }
 
-    public function addPlugin(string $path)
-    {
-        if (!file_exists($path)) return;
-
-        $m = require_once($path);
-
-
-        if ($m instanceof Closure) {
-
-            $context = $this->context;
-
-            $inject = function (string $key, $value) use ($context) {
-                $context->$key = $value;
-            };
-
-
-            $m->call($this, $context, $inject);
-        }
-    }
-
     public function run()
     {
         $this->render($this->context->route->path);
