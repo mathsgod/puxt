@@ -14,6 +14,7 @@ class ModuleContainer
     public function __construct(App $puxt)
     {
         $this->puxt = $puxt;
+        $this->config=$puxt->config;
     }
 
     public function ready()

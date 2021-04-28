@@ -5,6 +5,7 @@ return [
         "title" => "abc"
     ],
     "data" => function () {
+        
 
 
         function a()
