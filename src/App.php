@@ -312,6 +312,15 @@ class App
             $page_loader->processProps();
             $page_loader->processCreated();
 
+
+            $params = $this->request->getQueryParams();
+            if ($params["_action"]) {
+                $ret = $page_loader->processAction($params["_action"]);
+                header("Content-type: application/json");
+                echo json_encode($ret, JSON_UNESCAPED_UNICODE);
+                die();
+            }
+
             if ($this->request->getMethod() == "GET") {
                 $ret = $page_loader->processGet();
                 if (is_array($ret) || $ret instanceof JsonSerializable) {

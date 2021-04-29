@@ -56,6 +56,14 @@ class Loader
         }
     }
 
+    public function processAction(string $action)
+    {
+        $act = $this->stub["action"][$action];
+        if ($act instanceof Closure) {
+            return $act->call($this->component, $this->context);
+        }
+    }
+
     public function processProps()
     {
         //props
