@@ -69,10 +69,12 @@ class App
 
         $route = new Route();
         $route->path = $request_path;
-        $route->params = $this->request->getQueryParams();
+        $route->query = $this->request->getQueryParams();
+        $route->params = new stdClass;
 
         $this->context->route = $route;
         $this->context->params = $route->params;
+        $this->context->query = $route->query;
 
         //module before
         $this->moduleContainer->ready();
@@ -158,9 +160,10 @@ class App
         $context = $this->context;
 
 
-
         //dynamic route
         if (count(glob($this->root . "/" . $this->config["dir"]["pages"] . "/" . $request_path . ".*")) == 0) {
+
+
 
             $path_path = explode("/", $request_path);
 
@@ -180,14 +183,14 @@ class App
 
 
             foreach ($test_path as $test) {
-                if (count($files = glob($this->root . "/pages/" . $test["test"]))) {
+                if (count($files = glob($this->root . "/" . $this->config["dir"]["pages"] . "/" . $test["test"]))) {
                     $value = array_shift($test["suffix"]);
 
                     $f = $test["test"] . "/" . implode("/", $test["suffix"]);
                     $file = $files[0];
                     if (is_file($file)) {
                         $file = $files[0];
-                        $file = substr($file, strlen($this->root . "/pages/"));
+                        $file = substr($file, strlen($this->root . "/" . $this->config["dir"]["pages"] . "/"));
 
                         $ext = pathinfo($file, PATHINFO_EXTENSION);
                         $file = substr($file, 0, -strlen($ext) - 1);
@@ -208,9 +211,9 @@ class App
 
 
 
-                    if (count($files = glob($this->root . "/pages/" . $test["test"] . "/" . implode("/", $test["suffix"]) . ".*"))) {
+                    if (count($files = glob($this->root . "/" . $this->config["dir"]["pages"] . "/" . $test["test"] . "/" . implode("/", $test["suffix"]) . ".*"))) {
                         $file = $files[0];
-                        $file = substr($file, strlen($this->root . "/pages/"));
+                        $file = substr($file, strlen($this->root . "/" . $this->config["dir"]["pages"] . "/"));
 
                         $ext = pathinfo($file, PATHINFO_EXTENSION);
                         $file = substr($file, 0, -strlen($ext) - 1);
