@@ -44,6 +44,7 @@ class App
 
         $this->context = new Context;
         $this->context->config = $this->config;
+        $this->context->root = $root;
 
         $this->moduleContainer = new ModuleContainer($this);
 
@@ -269,28 +270,35 @@ class App
             exit;
         }
 
-        $layout = ($page_loader->layout ?? "default");
-        if ($this->config["layouts"][$layout]) {
-            $layout = $this->config["layouts"][$layout];
-        } else {
-            $layout = "layouts/$layout";
+        if (in_array("XMLHttpRequest", $this->request->getHeader("X-Requested-With") ?? [])) {
+            $ajax = true;
         }
 
-        $layouts = glob($this->root . "/" . $layout . ".*");
 
-        if (count($layouts) == 0) { //layout not found
-            $layout = "vendor/mathsgod/puxt/layouts/default";
-        }
+        if (!$ajax) {
+            $layout = ($page_loader->layout ?? "default");
+            if ($this->config["layouts"][$layout]) {
+                $layout = $this->config["layouts"][$layout];
+            } else {
+                $layout = "layouts/$layout";
+            }
 
-        $layout_loader = new Loader($layout, $this, $context, $this->config["head"]);
-        foreach ($layout_loader->middleware as $middleware) {
-            $m = require_once($this->root . "/middleware/$middleware.php");
-            if ($m instanceof Closure) {
-                $m->call($this, $context);
+            $layouts = glob($this->root . "/" . $layout . ".*");
 
-                if ($context->_redirected) {
-                    header("location: $context->_redirected_url");
-                    return;
+            if (count($layouts) == 0) { //layout not found
+                $layout = "vendor/mathsgod/puxt/layouts/default";
+            }
+
+            $layout_loader = new Loader($layout, $this, $context, $this->config["head"]);
+            foreach ($layout_loader->middleware as $middleware) {
+                $m = require_once($this->root . "/middleware/$middleware.php");
+                if ($m instanceof Closure) {
+                    $m->call($this, $context);
+
+                    if ($context->_redirected) {
+                        header("location: $context->_redirected_url");
+                        return;
+                    }
                 }
             }
         }
@@ -308,9 +316,10 @@ class App
         }
 
         try {
-            $layout_loader->processCreated();
-
-            $head = $layout_loader->getHead($head);
+            if (!$ajax) {
+                $layout_loader->processCreated();
+                $head = $layout_loader->getHead($head);
+            }
 
             $page_loader->processProps();
             $page_loader->processCreated();
@@ -343,6 +352,11 @@ class App
 
         $this->callHook("render:before", $page_loader);
         $puxt = $page_loader->render("");
+
+        if ($ajax) {
+            echo $puxt;
+            die();
+        }
 
 
         $this->callHook("render:before", $layout_loader);
