@@ -45,9 +45,12 @@ class Loader
             $data = $this->stub["data"];
             if ($data instanceof Closure) {
                 $data->call($this->component, $this->context);
-            }
-            foreach ($data as $k => $v) {
-                $this->component->$k = $v;
+            } else {
+                if (is_array($data)) {
+                    foreach ($data as $k => $v) {
+                        $this->component->$k = $v;
+                    }
+                }
             }
 
 
@@ -67,7 +70,7 @@ class Loader
     public function processProps()
     {
         //props
-        $props = $this->stub["props"];
+        $props = $this->stub["props"] ?? [];
         foreach ($props as $name => $value) {
 
 
@@ -155,7 +158,7 @@ class Loader
             $head["title"] = $h["title"];
         }
 
-        foreach ($h["meta"] as $meta) {
+        foreach ($h["meta"] ?? [] as $meta) {
             if ($meta["hid"]) {
 
                 foreach ($head["meta"] as $k => $m) {
@@ -180,11 +183,11 @@ class Loader
             $head["headAttrs"] = $h["headAttrs"];
         }
 
-        foreach ($h["link"] as $link) {
+        foreach ($h["link"] ?? [] as $link) {
             $head["link"][] = $link;
         }
 
-        foreach ($h["script"] as $script) {
+        foreach ($h["script"] ?? [] as $script) {
             $head["script"][] = $script;
         }
 

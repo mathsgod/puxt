@@ -110,12 +110,16 @@ class App
             $html[] = "<title>" . htmlentities($head['title']) . "</title>";
         }
 
-        foreach ($head["meta"] as $meta) {
-            $html[] = (string)html("meta")->attr($meta);
+        if (is_array($head["meta"])) {
+            foreach ($head["meta"] as $meta) {
+                $html[] = (string)html("meta")->attr($meta);
+            }
         }
 
-        foreach ($head["link"] as $link) {
-            $html[] = (string)html("link")->attr($link);
+        if (is_array($head["link"])) {
+            foreach ($head["link"] as $link) {
+                $html[] = (string)html("link")->attr($link);
+            }
         }
 
 
@@ -290,14 +294,16 @@ class App
             }
 
             $layout_loader = new Loader($layout, $this, $context, $this->config["head"]);
-            foreach ($layout_loader->middleware as $middleware) {
-                $m = require_once($this->root . "/middleware/$middleware.php");
-                if ($m instanceof Closure) {
-                    $m->call($this, $context);
+            if (is_array($layout_loader->middleware)) {
+                foreach ($layout_loader->middleware as $middleware) {
+                    $m = require_once($this->root . "/middleware/$middleware.php");
+                    if ($m instanceof Closure) {
+                        $m->call($this, $context);
 
-                    if ($context->_redirected) {
-                        header("location: $context->_redirected_url");
-                        return;
+                        if ($context->_redirected) {
+                            header("location: $context->_redirected_url");
+                            return;
+                        }
                     }
                 }
             }
