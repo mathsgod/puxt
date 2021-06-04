@@ -76,6 +76,7 @@ class App
         $this->context->route = $route;
         $this->context->params = $route->params;
         $this->context->query = $route->query;
+        $this->context->req = $this->request;
 
         //module before
         $this->moduleContainer->ready();
@@ -163,7 +164,6 @@ class App
             $head["base"] = ["href" => "/" . $this->context->i18n->language . "/"];
         }
         $context = $this->context;
-
 
         //dynamic route
         if (count(glob($this->root . "/" . $this->config["dir"]["pages"] . "/" . $request_path . ".*")) == 0) {
@@ -262,11 +262,24 @@ class App
                 return;
             }
         }
+
+
         $page_loader = new Loader($page, $this, $context);
+
 
         if ($this->request->getMethod() == "POST") {
             $page_loader->processProps();
-            $ret = $page_loader->processPost();
+            try {
+                $ret = $page_loader->processPost();
+            } catch (Exception $e) {
+                echo json_encode([
+                    "error" => [
+                        "message" => $e->getMessage()
+                    ]
+                ], JSON_UNESCAPED_UNICODE);
+                exit();
+            }
+
             if (is_array($ret)) {
                 header("Content-type: application/json");
                 echo json_encode($ret);
@@ -286,7 +299,6 @@ class App
             } else {
                 $layout = "layouts/$layout";
             }
-
             $layouts = glob($this->root . "/" . $layout . ".*");
 
             if (count($layouts) == 0) { //layout not found
@@ -332,8 +344,17 @@ class App
 
 
             $params = $this->request->getQueryParams();
-            if ($params["_action"]) {
-                $ret = $page_loader->processAction($params["_action"]);
+            if ($params["_entry"]) {
+                $ret = $page_loader->processEntry($params["_entry"]);
+
+                header("Content-type: application/json");
+                echo json_encode($ret, JSON_UNESCAPED_UNICODE);
+                die();
+            }
+
+            if ($params["_method"]) {
+                $ret = $page_loader->processMethod($params["_method"]);
+
                 header("Content-type: application/json");
                 echo json_encode($ret, JSON_UNESCAPED_UNICODE);
                 die();
@@ -348,13 +369,13 @@ class App
                 }
             }
 
-
             $head = $page_loader->getHead($head);
         } catch (Exception $e) {
             //throw new RuntimeException($e->getMessage());
             echo $e->getMessage();
             die();
         }
+
 
         $this->callHook("render:before", $page_loader);
         $puxt = $page_loader->render("");
@@ -363,6 +384,8 @@ class App
             echo $puxt;
             die();
         }
+
+
 
 
         $this->callHook("render:before", $layout_loader);

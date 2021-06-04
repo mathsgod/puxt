@@ -7,11 +7,14 @@ use Exception;
 
 /**
  * @property Route $route
+ * @property \PHP\Psr7\ServerRequest $req
  */
 class Context
 {
     public $params;
+    public $query;
     public $_redirected = false;
+    public $req;
     public $_redirected_url;
 
     public $route = null;

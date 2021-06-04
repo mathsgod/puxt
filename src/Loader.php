@@ -21,6 +21,7 @@ class Loader
 
     public function __construct(string $path, $app, Context $context, $head = [])
     {
+
         $this->path = $path;
         $this->app = $app;
         $this->context = $context;
@@ -53,15 +54,13 @@ class Loader
                 }
             }
 
-
-
             $this->middleware = $this->stub["middleware"] ?? [];
         }
     }
 
-    public function processAction(string $action)
+    public function processEntry(string $entry)
     {
-        $act = $this->stub["action"][$action];
+        $act = $this->stub["entries"][$entry];
         if ($act instanceof Closure) {
             return $act->call($this->component, $this->context);
         }
