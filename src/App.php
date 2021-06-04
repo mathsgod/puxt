@@ -352,14 +352,6 @@ class App
                 die();
             }
 
-            if ($params["_method"]) {
-                $ret = $page_loader->processMethod($params["_method"]);
-
-                header("Content-type: application/json");
-                echo json_encode($ret, JSON_UNESCAPED_UNICODE);
-                die();
-            }
-
             if ($this->request->getMethod() == "GET") {
                 $ret = $page_loader->processGet();
                 if (is_array($ret) || $ret instanceof JsonSerializable) {
