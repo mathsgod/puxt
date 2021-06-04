@@ -27,6 +27,10 @@ class Loader
         $this->context = $context;
 
         $this->component = new Component();
+        foreach ($this->context as $k => $v) {
+            $this->component->{"_" . $k} = $v;
+        }
+
 
         if (file_exists($file = $this->path . ".php")) {
 
