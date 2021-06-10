@@ -5,6 +5,7 @@ namespace PUXT;
 use Closure;
 use Exception;
 use JsonSerializable;
+use PHP\Psr7\Response;
 use PHP\Psr7\ServerRequest;
 use stdClass;
 
@@ -77,6 +78,7 @@ class App
         $this->context->query = $route->query;
         $this->context->req = $this->request;
 
+
         //module before
         $this->moduleContainer->ready();
     }
@@ -123,8 +125,10 @@ class App
         }
 
 
-        foreach ($head["script"] as $script) {
-            $html[] = (string)html("script")->attr($script);
+        if (is_array($head["script"])) {
+            foreach ($head["script"] as $script) {
+                $html[] = (string)html("script")->attr($script);
+            }
         }
 
 
@@ -265,11 +269,12 @@ class App
 
         $page_loader = new Loader($page, $this, $context);
 
-
         if ($this->request->getMethod() == "POST") {
             $page_loader->processProps();
             try {
+                $page_loader->processCreated();
                 $ret = $page_loader->processPost();
+                $this->callHook("page:after_post", $page_loader);
             } catch (Exception $e) {
                 echo json_encode([
                     "error" => [
@@ -375,9 +380,6 @@ class App
             echo $puxt;
             die();
         }
-
-
-
 
         $this->callHook("render:before", $layout_loader);
         $app = $layout_loader->render($puxt);

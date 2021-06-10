@@ -14,7 +14,7 @@ class ModuleContainer
     public function __construct(App $puxt)
     {
         $this->puxt = $puxt;
-        $this->config=$puxt->config;
+        $this->config = $puxt->config;
     }
 
     public function ready()
@@ -66,11 +66,13 @@ class ModuleContainer
         }
 
         if (!file_exists($entry)) {
-            echo "Module: $module not found";
+            echo "Module: $module/index.php not found";
+            die();
         }
 
         if (!$entry) {
             echo "Module: $module not found";
+            die();
         }
 
         $m = require_once($entry);

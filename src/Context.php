@@ -8,7 +8,7 @@ use Exception;
 /**
  * @property Route $route
  * @property \PHP\Psr7\ServerRequest $req
- */
+  */
 class Context
 {
     public $params;
@@ -16,7 +16,6 @@ class Context
     public $_redirected = false;
     public $req;
     public $_redirected_url;
-
     public $route = null;
 
     public function redirect(string $url)

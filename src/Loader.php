@@ -4,6 +4,7 @@ namespace PUXT;
 
 use Closure;
 use Exception;
+use Generator;
 use ReflectionFunction;
 use stdClass;
 
@@ -17,7 +18,7 @@ class Loader
     public $twig_content = "";
     public $layout;
     public $component;
-    public $middleware;
+    public $middleware = [];
 
     public function __construct(string $path, $app, Context $context, $head = [])
     {
@@ -127,14 +128,6 @@ class Loader
         }
     }
 
-    public function processGet()
-    {
-        $get = $this->stub["get"];
-        if ($get instanceof Closure) {
-            return $get->call($this->component, $this->context);
-        }
-    }
-
     public function post(array $body = [])
     {
         if (file_exists($this->path . ".php")) {
@@ -238,11 +231,41 @@ class Loader
         return $ret;
     }
 
+    public function processGet()
+    {
+        return $this->processVerb("get");
+    }
+
     public function processPost()
     {
-        $post = $this->stub["post"];
-        if ($post instanceof Closure) {
-            return $post->call($this->component, $this->context);
+        return $this->processVerb("post");
+    }
+
+    public function processPut()
+    {
+        return $this->processVerb("put");
+    }
+
+    public function processDelete()
+    {
+        return $this->processVerb("delete");
+    }
+
+    public function processPatch()
+    {
+        return $this->processVerb("patch");
+    }
+
+    private function processVerb(string $verb)
+    {
+        $get = $this->stub[$verb];
+        if ($get instanceof Closure) {
+            $ret = $get->call($this->component, $this->context);
+
+            if ($ret instanceof Generator) {
+                return iterator_to_array($ret);
+            }
+            return $ret;
         }
     }
 }
