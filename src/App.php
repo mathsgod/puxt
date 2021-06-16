@@ -349,8 +349,17 @@ class App
 
             $params = $this->request->getQueryParams();
             if ($params["_entry"]) {
-                $ret = $page_loader->processEntry($params["_entry"]);
-
+                try {
+                    $ret = $page_loader->processEntry($params["_entry"]);
+                } catch (Exception $e) {
+                    $ret = [
+                        "error" =>
+                        [
+                            "code" => $e->getCode(),
+                            "message" => $e->getMessage()
+                        ]
+                    ];
+                }
                 header("Content-type: application/json");
                 echo json_encode($ret, JSON_UNESCAPED_UNICODE);
                 die();
@@ -367,8 +376,12 @@ class App
 
             $head = $page_loader->getHead($head);
         } catch (Exception $e) {
-            //throw new RuntimeException($e->getMessage());
-            echo $e->getMessage();
+            if ($this->request->getHeader("accept")[0] == "application/json") {
+                header("Content-type: application/json");
+                echo json_encode(["error" => ["message" => $e->getMessage(), "code" => $e->getCode()]]);
+            } else {
+                echo $e->getMessage();
+            }
             die();
         }
 
