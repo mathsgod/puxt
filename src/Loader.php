@@ -231,12 +231,22 @@ class Loader
 
     public function render($puxt)
     {
+        if (file_exists($this->path . ".twig")) {
+            $twig = $this->app->twig;
+        } else {
+            $twig_loader = new \Twig\Loader\ArrayLoader([
+                'page' => $this->twig_content,
+            ]);
+            $twig = new \Twig\Environment($twig_loader, ["debug" => true]);
+            $twig->addExtension(new \Twig_Extensions_Extension_I18n());
+        }
+
         if (is_object($this->stub)) {
 
             $stub = $this->stub;
             $ref_obj = new ReflectionObject($this->stub);
             foreach ($ref_obj->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
-                $this->app->twig->addFunction(new TwigFunction($method->name, function () use ($method, $stub) {
+                $twig->addFunction(new TwigFunction($method->name, function () use ($method, $stub) {
                     return $method->invokeArgs($stub, func_get_args());
                 }));
             }
@@ -267,16 +277,8 @@ class Loader
 
         try {
             if (file_exists($this->path . ".twig")) {
-
-                $twig = $this->app->twig->load($this->path . ".twig");
-
-                $ret = $twig->render($data);
+                $ret = $twig->load($this->path . ".twig")->render($data);
             } else {
-                $twig_loader = new \Twig\Loader\ArrayLoader([
-                    'page' => $this->twig_content,
-                ]);
-                $twig = new \Twig\Environment($twig_loader, ["debug" => true]);
-                $twig->addExtension(new \Twig_Extensions_Extension_I18n());
                 $ret = $twig->render("page", $data);
             }
         } catch (Exception $e) {
