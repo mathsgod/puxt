@@ -37,7 +37,6 @@ class Loader
             $this->component->{"_" . $k} = $v;
         }
 
-
         if (file_exists($file = $this->path . ".php")) {
 
             ob_start();
@@ -48,6 +47,10 @@ class Loader
             if (is_object($this->stub)) {
                 $this->layout = $this->stub->layout;
                 $this->middleware = $this->stub->middleware ?? [];
+
+                foreach ($this->context as $k => $v) {
+                    $this->stub->{"_" . $k} = $v;
+                }
             } else {
 
                 $this->layout = $this->stub["layout"];
