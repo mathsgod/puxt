@@ -203,6 +203,10 @@ class Loader
             $data["_i18n"] = $this->context->i18n;
         }
 
+        $name = $this->context->config["context"]["name"] ?? "_puxt";
+        $data[$name] = $this->context;
+
+
         if (file_exists($this->path . ".vue")) {
             $path = $this->app->base_path . "_vue/" . $this->context->route->path;
 
