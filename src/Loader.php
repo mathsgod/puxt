@@ -6,7 +6,12 @@ use Closure;
 use Exception;
 use Generator;
 use ReflectionFunction;
+use ReflectionMethod;
+use ReflectionObject;
+use ReflectionProperty;
 use stdClass;
+use Twig\TwigFunction;
+use Twig_SimpleFunction;
 
 class Loader
 {
@@ -40,39 +45,56 @@ class Loader
             $this->twig_content = ob_get_contents();
             ob_end_clean();
 
-            $this->layout = $this->stub["layout"];
-
-            if ($this->stub["methods"]) {
-                foreach ($this->stub["methods"] as $name => $method) {
-                    $this->component->_methods[$name] = Closure::bind($method, $this->component, Component::class);
-                }
-            }
-
-            $data = $this->stub["data"];
-            if ($data instanceof Closure) {
-                $data->call($this->component, $this->context);
+            if (is_object($this->stub)) {
+                $this->layout = $this->stub->layout;
+                $this->middleware = $this->stub->middleware ?? [];
             } else {
-                if (is_array($data)) {
-                    foreach ($data as $k => $v) {
-                        $this->component->$k = $v;
+
+                $this->layout = $this->stub["layout"];
+
+                if ($this->stub["methods"]) {
+                    foreach ($this->stub["methods"] as $name => $method) {
+                        $this->component->_methods[$name] = Closure::bind($method, $this->component, Component::class);
                     }
                 }
-            }
 
-            $this->middleware = $this->stub["middleware"] ?? [];
+                $data = $this->stub["data"];
+                if ($data instanceof Closure) {
+                    $data->call($this->component, $this->context);
+                } else {
+                    if (is_array($data)) {
+                        foreach ($data as $k => $v) {
+                            $this->component->$k = $v;
+                        }
+                    }
+                }
+
+                $this->middleware = $this->stub["middleware"] ?? [];
+            }
         }
     }
 
     public function processEntry(string $entry)
     {
-        $act = $this->stub["entries"][$entry];
-        if ($act instanceof Closure) {
-            return $act->call($this->component, $this->context);
+        if (is_object($this->stub)) {
+
+            $ref_obj = new ReflectionObject($this->stub);
+            if ($ref_obj->hasMethod($entry)) {
+                return $ref_obj->getMethod($entry)->invoke($this->stub, $this->context);
+            }
+        } else {
+            $act = $this->stub["entries"][$entry];
+            if ($act instanceof Closure) {
+                return $act->call($this->component, $this->context);
+            }
         }
     }
 
     public function processProps()
     {
+        if (is_object($this->stub)) {
+            return;
+        }
         //props
         $props = $this->stub["props"] ?? [];
         foreach ($props as $name => $value) {
@@ -121,10 +143,18 @@ class Loader
 
     public function processCreated()
     {
-        //created
-        $created = $this->stub["created"];
-        if ($created instanceof Closure) {
-            $created->call($this->component, $this->context);
+        if (is_object($this->stub)) {
+
+            $ref_obj = new ReflectionObject($this->stub);
+            if ($ref_obj->hasMethod("created")) {
+                $ref_obj->getMethod("created")->invoke($this->stub, $this->context);
+            }
+        } else {
+            //created
+            $created = $this->stub["created"];
+            if ($created instanceof Closure) {
+                $created->call($this->component, $this->context);
+            }
         }
     }
 
@@ -145,10 +175,16 @@ class Loader
 
     public function getHead(array $head)
     {
-        $h = $this->stub["head"] ?? [];
-        if ($h instanceof Closure) {
-            $h = $h->call($this->component, $this->context);
+
+        if (is_object($this->stub)) {
+            $h = $this->stub->head ?? [];
+        } else {
+            $h = $this->stub["head"] ?? [];
+            if ($h instanceof Closure) {
+                $h = $h->call($this->component, $this->context);
+            }
         }
+
 
         if ($h["title"]) {
             $head["title"] = $h["title"];
@@ -194,17 +230,28 @@ class Loader
 
     public function render($puxt)
     {
-        $data = (array)$this->component;
-        $data["puxt"] = $puxt;
-        $data["_params"] = $this->context->params;
-        $data["_route"] = $this->context->route;
-        $data["_config"] = $this->context->config;
-        if ($this->context->i18n) {
-            $data["_i18n"] = $this->context->i18n;
-        }
+        if (is_object($this->stub)) {
 
-        $name = $this->context->config["context"]["name"] ?? "_puxt";
-        $data[$name] = $this->context;
+            $stub = $this->stub;
+            $ref_obj = new ReflectionObject($this->stub);
+            foreach ($ref_obj->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+                $this->app->twig->addFunction(new TwigFunction($method->name, function () use ($method, $stub) {
+                    return $method->invokeArgs($stub, func_get_args());
+                }));
+            }
+            $data = (array)$this->stub;
+        } else {
+            $data = (array)$this->component;
+            $data["puxt"] = $puxt;
+            $data["_params"] = $this->context->params;
+            $data["_route"] = $this->context->route;
+            $data["_config"] = $this->context->config;
+            if ($this->context->i18n) {
+                $data["_i18n"] = $this->context->i18n;
+            }
+            $name = $this->context->config["context"]["name"] ?? "_puxt";
+            $data[$name] = $this->context;
+        }
 
 
         if (file_exists($this->path . ".vue")) {
@@ -219,7 +266,9 @@ class Loader
 
         try {
             if (file_exists($this->path . ".twig")) {
+
                 $twig = $this->app->twig->load($this->path . ".twig");
+
                 $ret = $twig->render($data);
             } else {
                 $twig_loader = new \Twig\Loader\ArrayLoader([
@@ -262,14 +311,21 @@ class Loader
 
     private function processVerb(string $verb)
     {
-        $get = $this->stub[$verb];
-        if ($get instanceof Closure) {
-            $ret = $get->call($this->component, $this->context);
-
-            if ($ret instanceof Generator) {
-                return iterator_to_array($ret);
+        if (is_object($this->stub)) {
+            $ref_obj = new ReflectionObject($this->stub);
+            if ($ref_obj->hasMethod($verb)) {
+                return $ref_obj->getMethod($verb)->invoke($this->stub, $this->context);
             }
-            return $ret;
+        } else {
+            $get = $this->stub[$verb];
+            if ($get instanceof Closure) {
+                $ret = $get->call($this->component, $this->context);
+
+                if ($ret instanceof Generator) {
+                    return iterator_to_array($ret);
+                }
+                return $ret;
+            }
         }
     }
 }

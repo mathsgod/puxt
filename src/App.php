@@ -25,6 +25,7 @@ class App
     public $moduleContainer;
 
     private $_hooks = [];
+    public $twig;
 
     public function __construct(string $root)
     {
@@ -41,6 +42,8 @@ class App
         $loader = new \Twig\Loader\FilesystemLoader($this->root);
         $this->twig = new \Twig\Environment($loader, ["debug" => true]);
         $this->twig->addExtension(new \Twig_Extensions_Extension_I18n());
+        
+        
 
         $this->context = new Context;
         $this->context->config = $this->config;
@@ -295,7 +298,6 @@ class App
             $ajax = true;
         }
 
-
         if (!$ajax) {
             $layout = ($page_loader->layout ?? "default");
             if ($this->config["layouts"][$layout]) {
@@ -384,7 +386,6 @@ class App
             }
             die();
         }
-
 
         $this->callHook("render:before", $page_loader);
         $puxt = $page_loader->render("");
