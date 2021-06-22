@@ -223,8 +223,6 @@ class Loader
             $head["script"][] = $script;
         }
 
-
-
         return $head;
     }
 
