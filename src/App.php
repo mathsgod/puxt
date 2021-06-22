@@ -42,12 +42,12 @@ class App
         $loader = new \Twig\Loader\FilesystemLoader($this->root);
         $this->twig = new \Twig\Environment($loader, ["debug" => true]);
         $this->twig->addExtension(new \Twig_Extensions_Extension_I18n());
-        
-        
 
         $this->context = new Context;
         $this->context->config = $this->config;
         $this->context->root = $root;
+        $this->context->_get = $_GET;
+        $this->context->_post = $this->request->getParsedBody();
 
         $this->moduleContainer = new ModuleContainer($this);
 

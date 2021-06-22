@@ -40,7 +40,7 @@ class Loader
         if (file_exists($file = $this->path . ".php")) {
 
             ob_start();
-            $this->stub = require_once($file);
+            $this->stub = require($file);
             $this->twig_content = ob_get_contents();
             ob_end_clean();
 
@@ -245,9 +245,20 @@ class Loader
 
             $stub = $this->stub;
             $ref_obj = new ReflectionObject($this->stub);
-            foreach ($ref_obj->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+            foreach ($ref_obj->getMethods(ReflectionMethod::IS_PROTECTED | ReflectionMethod::IS_PUBLIC) as $method) {
+
                 $twig->addFunction(new TwigFunction($method->name, function () use ($method, $stub) {
-                    return $method->invokeArgs($stub, func_get_args());
+
+                    $args=func_get_args();
+                    $name = $method->name;
+                    return  Closure::bind(
+                        function ($class) use ($name,$args) {
+                            return call_user_func_array([$class,$name],$args);
+                        },
+                        $stub,
+                        get_class($stub)
+                    )($stub);
+
                 }));
             }
             $data = (array)$this->stub;
