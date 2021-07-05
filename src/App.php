@@ -288,6 +288,7 @@ class App
             }
         }
 
+
         //process entry
         $params = $this->request->getQueryParams();
         if ($params["_entry"]) {
@@ -308,6 +309,7 @@ class App
         }
 
         $verb = $this->request->getMethod();
+
 
         if ($verb == "GET") {
             $layout = ($page_loader->layout ?? "default");
@@ -340,7 +342,12 @@ class App
 
 
         try {
-            $page_loader->processVerb($verb);
+            $ret = $page_loader->processVerb($verb);
+            if (is_array($ret) || $ret instanceof JsonSerializable) {
+                header("Content-type: application/json");
+                echo json_encode($ret, JSON_UNESCAPED_UNICODE);
+                die();
+            }
 
 
             if ($verb == "GET") {
