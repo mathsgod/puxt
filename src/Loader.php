@@ -323,7 +323,7 @@ class Loader
         return $this->processVerb("patch");
     }
 
-    private function processVerb(string $verb)
+    public function processVerb(string $verb)
     {
         if (is_object($this->stub)) {
             $ref_obj = new ReflectionObject($this->stub);

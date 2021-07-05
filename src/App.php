@@ -272,33 +272,44 @@ class App
 
         $page_loader = new Loader($page, $this, $context);
 
-        if ($this->request->getMethod() == "POST") {
-            $page_loader->processProps();
+        $page_loader->processProps();
+        $page_loader->processCreated();
+
+
+        foreach ($page_loader->middleware as $middleware) {
+            $m = require_once($this->root . "/middleware/$middleware.php");
+            if ($m instanceof Closure) {
+                $m->call($this, $context);
+
+                if ($context->_redirected) {
+                    header("location: $context->_redirected_url");
+                    return;
+                }
+            }
+        }
+
+        //process entry
+        $params = $this->request->getQueryParams();
+        if ($params["_entry"]) {
             try {
-                $page_loader->processCreated();
-                $ret = $page_loader->processPost();
-                $this->callHook("page:after_post", $page_loader);
+                $ret = $page_loader->processEntry($params["_entry"]);
             } catch (Exception $e) {
-                echo json_encode([
-                    "error" => [
+                $ret = [
+                    "error" =>
+                    [
+                        "code" => $e->getCode(),
                         "message" => $e->getMessage()
                     ]
-                ], JSON_UNESCAPED_UNICODE);
-                exit();
+                ];
             }
-
-            if (is_array($ret)) {
-                header("Content-type: application/json");
-                echo json_encode($ret);
-            }
-            exit;
+            header("Content-type: application/json");
+            echo json_encode($ret, JSON_UNESCAPED_UNICODE);
+            die();
         }
 
-        if (in_array("XMLHttpRequest", $this->request->getHeader("X-Requested-With") ?? [])) {
-            $ajax = true;
-        }
+        $verb = $this->request->getMethod();
 
-        if (!$ajax) {
+        if ($verb == "GET") {
             $layout = ($page_loader->layout ?? "default");
             if ($this->config["layouts"][$layout]) {
                 $layout = $this->config["layouts"][$layout];
@@ -327,56 +338,14 @@ class App
             }
         }
 
-        foreach ($page_loader->middleware as $middleware) {
-            $m = require_once($this->root . "/middleware/$middleware.php");
-            if ($m instanceof Closure) {
-                $m->call($this, $context);
-
-                if ($context->_redirected) {
-                    header("location: $context->_redirected_url");
-                    return;
-                }
-            }
-        }
 
         try {
-            if (!$ajax) {
-                $layout_loader->processCreated();
-                $head = $layout_loader->getHead($head);
+            $page_loader->processVerb($verb);
+
+
+            if ($verb == "GET") {
+                $head = $page_loader->getHead($head);
             }
-
-            $page_loader->processProps();
-            $page_loader->processCreated();
-
-
-            $params = $this->request->getQueryParams();
-            if ($params["_entry"]) {
-                try {
-                    $ret = $page_loader->processEntry($params["_entry"]);
-                } catch (Exception $e) {
-                    $ret = [
-                        "error" =>
-                        [
-                            "code" => $e->getCode(),
-                            "message" => $e->getMessage()
-                        ]
-                    ];
-                }
-                header("Content-type: application/json");
-                echo json_encode($ret, JSON_UNESCAPED_UNICODE);
-                die();
-            }
-
-            if ($this->request->getMethod() == "GET") {
-                $ret = $page_loader->processGet();
-                if (is_array($ret) || $ret instanceof JsonSerializable) {
-                    header("Content-type: application/json");
-                    echo json_encode($ret, JSON_UNESCAPED_UNICODE);
-                    die();
-                }
-            }
-
-            $head = $page_loader->getHead($head);
         } catch (Exception $e) {
             if ($this->request->getHeader("accept")[0] == "application/json") {
                 header("Content-type: application/json");
@@ -384,16 +353,15 @@ class App
             } else {
                 echo $e->getMessage();
             }
-            die();
+
+            if ($verb != "GET") {
+                exit;
+            }
         }
+
 
         $this->callHook("render:before", $page_loader);
         $puxt = $page_loader->render("");
-
-        if ($ajax) {
-            echo $puxt;
-            die();
-        }
 
         $this->callHook("render:before", $layout_loader);
         $app = $layout_loader->render($puxt);
