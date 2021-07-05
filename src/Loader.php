@@ -331,9 +331,9 @@ class Loader
                 return $ref_obj->getMethod($verb)->invoke($this->stub, $this->context);
             }
         } else {
-            $get = $this->stub[$verb];
-            if ($get instanceof Closure) {
-                $ret = $get->call($this->component, $this->context);
+            $func = $this->stub[strtolower($verb)];
+            if ($func instanceof Closure) {
+                $ret = $func->call($this->component, $this->context);
 
                 if ($ret instanceof Generator) {
                     return iterator_to_array($ret);
