@@ -367,7 +367,6 @@ class App
         $app = $layout_loader->render($puxt);
 
 
-
         $app_template = $this->getAppTemplate();
 
         $data = [];
