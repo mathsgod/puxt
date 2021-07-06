@@ -352,6 +352,8 @@ class App
 
             if ($verb == "GET") {
                 $head = $page_loader->getHead($head);
+            }else {
+                exit;
             }
         } catch (Exception $e) {
             if ($this->request->getHeader("accept")[0] == "application/json") {
