@@ -262,6 +262,11 @@ class Loader
                 }));
             }
             $data = (array)$this->stub;
+            $name = $this->context->config["context"]["name"] ?? "_puxt";
+            $data["_params"] = $this->context->params;
+            $data["_route"] = $this->context->route;
+            $data["_config"] = $this->context->config;
+            $data[$name] = $this->context;
         } else {
             $data = (array)$this->component;
             $data["puxt"] = $puxt;
