@@ -340,32 +340,37 @@ class App
             }
         }
 
-
         try {
+            ob_start();
             $ret = $page_loader->processVerb($verb);
+            $content = ob_get_contents();
+            ob_end_clean();
+
             if (is_array($ret) || $ret instanceof JsonSerializable) {
                 header("Content-type: application/json");
                 echo json_encode($ret, JSON_UNESCAPED_UNICODE);
                 die();
+            } else {
+                echo $content;
             }
 
 
             if ($verb == "GET") {
                 $head = $page_loader->getHead($head);
-            }else {
-                exit;
             }
         } catch (Exception $e) {
-            if ($this->request->getHeader("accept")[0] == "application/json") {
+            $content = ob_get_contents();
+            ob_end_clean();
+            if ($this->request->getHeader("accept")[0] == "application/json" || $this->request->getHeader("accept")[0] == "*/*") {
                 header("Content-type: application/json");
                 echo json_encode(["error" => ["message" => $e->getMessage(), "code" => $e->getCode()]]);
             } else {
                 echo $e->getMessage();
             }
+        }
 
-            if ($verb != "GET") {
-                exit;
-            }
+        if ($verb != "GET") {
+            exit;
         }
 
 
