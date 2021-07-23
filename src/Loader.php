@@ -83,7 +83,11 @@ class Loader
 
             $ref_obj = new ReflectionObject($this->stub);
             if ($ref_obj->hasMethod($entry)) {
-                return $ref_obj->getMethod($entry)->invoke($this->stub, $this->context);
+                $ret = $ref_obj->getMethod($entry)->invoke($this->stub, $this->context);
+                if ($ret instanceof Generator) {
+                    $ret = iterator_to_array($ret);
+                }
+                return $ret;
             }
         } else {
             $act = $this->stub["entries"][$entry];
@@ -249,16 +253,15 @@ class Loader
 
                 $twig->addFunction(new TwigFunction($method->name, function () use ($method, $stub) {
 
-                    $args=func_get_args();
+                    $args = func_get_args();
                     $name = $method->name;
                     return  Closure::bind(
-                        function ($class) use ($name,$args) {
-                            return call_user_func_array([$class,$name],$args);
+                        function ($class) use ($name, $args) {
+                            return call_user_func_array([$class, $name], $args);
                         },
                         $stub,
                         get_class($stub)
                     )($stub);
-
                 }));
             }
             $data = (array)$this->stub;
