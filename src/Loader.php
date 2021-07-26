@@ -5,13 +5,10 @@ namespace PUXT;
 use Closure;
 use Exception;
 use Generator;
-use ReflectionFunction;
 use ReflectionMethod;
 use ReflectionObject;
-use ReflectionProperty;
-use stdClass;
 use Twig\TwigFunction;
-use Twig_SimpleFunction;
+
 
 class Loader
 {
@@ -24,8 +21,9 @@ class Loader
     public $layout;
     public $component;
     public $middleware = [];
+    public $app;
 
-    public function __construct(string $path, $app, Context $context, $head = [])
+    public function __construct(string $path, App $app, Context $context, $head = [])
     {
 
         $this->path = $path;
@@ -242,7 +240,9 @@ class Loader
                 'page' => $this->twig_content,
             ]);
             $twig = new \Twig\Environment($twig_loader, ["debug" => true]);
-            $twig->addExtension(new \Twig_Extensions_Extension_I18n());
+            foreach ($this->app->twig->twig_extensions as $ext) {
+                $twig->addExtension($ext);
+            }
         }
 
         if (is_object($this->stub)) {

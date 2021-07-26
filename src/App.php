@@ -5,9 +5,9 @@ namespace PUXT;
 use Closure;
 use Exception;
 use JsonSerializable;
-use PHP\Psr7\Response;
 use PHP\Psr7\ServerRequest;
 use stdClass;
+use Twig\Extension\ExtensionInterface;
 
 class App
 {
@@ -26,6 +26,7 @@ class App
 
     private $_hooks = [];
     public $twig;
+    public $twig_extensions = [];
 
     public function __construct(string $root)
     {
@@ -84,6 +85,11 @@ class App
 
         //module before
         $this->moduleContainer->ready();
+    }
+
+    public function addExtension(ExtensionInterface $extension)
+    {
+        $this->twig_extensions[] = $extension;
     }
 
     public function run()
@@ -372,7 +378,6 @@ class App
         if ($verb != "GET") {
             exit;
         }
-
 
         $this->callHook("render:before", $page_loader);
         $puxt = $page_loader->render("");
