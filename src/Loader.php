@@ -234,15 +234,12 @@ class Loader
     public function render($puxt)
     {
         if (file_exists($this->path . ".twig")) {
-            $twig = $this->app->twig;
+            $twig = $this->app->getTwig();
         } else {
             $twig_loader = new \Twig\Loader\ArrayLoader([
                 'page' => $this->twig_content,
             ]);
-            $twig = new \Twig\Environment($twig_loader, ["debug" => true]);
-            foreach ($this->app->twig->twig_extensions as $ext) {
-                $twig->addExtension($ext);
-            }
+            $twig = $this->app->getTwig($twig_loader);
         }
 
         if (is_object($this->stub)) {
@@ -290,7 +287,7 @@ class Loader
             $twig_loader = new \Twig\Loader\ArrayLoader([
                 'vue' => file_get_contents(dirname(__DIR__) . "/vue.twig"),
             ]);
-            $twig = new \Twig\Environment($twig_loader, ["debug" => true]);
+            $twig->setLoader($twig_loader);
             return  $twig->render("vue", ["path" => $path]);
         }
 

@@ -8,6 +8,7 @@ use JsonSerializable;
 use PHP\Psr7\ServerRequest;
 use stdClass;
 use Twig\Extension\ExtensionInterface;
+use Twig\Loader\LoaderInterface;
 
 class App
 {
@@ -26,7 +27,7 @@ class App
 
     private $_hooks = [];
     public $twig;
-    public $twig_extensions = [];
+    protected $twig_extensions = [];
 
     public function __construct(string $root)
     {
@@ -40,9 +41,6 @@ class App
             }
         }
 
-        $loader = new \Twig\Loader\FilesystemLoader($this->root);
-        $this->twig = new \Twig\Environment($loader, ["debug" => true]);
-        $this->twig->addExtension(new \Twig_Extensions_Extension_I18n());
 
         $this->context = new Context;
         $this->context->config = $this->config;
@@ -404,14 +402,14 @@ class App
             return $this->getTemplate("app.twig");
         } else { //load from default
             $loader = new \Twig\Loader\FilesystemLoader(dirname(__DIR__));
-            $twig = new \Twig\Environment($loader);
+            $twig = $this->getTwig($loader);
             return $twig->load("app.twig");
         }
     }
 
     public function getTemplate(string $file)
     {
-        return $this->twig->load($file);
+        return $this->getTwig()->load($file);
     }
 
     public function callHook(string $name, $args)
@@ -426,5 +424,19 @@ class App
     public function hook(string $name, callable $fn)
     {
         $this->_hooks[$name][] = $fn;
+    }
+
+    public function getTwig(LoaderInterface $loader = null)
+    {
+        if (!$loader) {
+            $loader = new \Twig\Loader\FilesystemLoader($this->root);
+        }
+
+        $twig = new \Twig\Environment($loader, ["debug" => true]);
+        foreach ($this->twig_extensions as $ext) {
+            $twig->addExtension($ext);
+        }
+
+        return $twig;
     }
 }
