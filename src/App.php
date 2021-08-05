@@ -80,6 +80,21 @@ class App
         $this->context->query = $route->query;
         $this->context->req = $this->request;
 
+        //plugins
+        foreach ($this->config["plugins"] as $plugin) {
+            if (file_exists($plugin)) {
+                $p = require($plugin);
+                if ($p instanceof Closure) {
+                    $context = $this->context;
+                    $inject = function (string $key, $value) use ($context) {
+                        $context->$key = $value;
+                    };
+                    $p->call($this, $context, $inject);
+                }
+            }
+        }
+
+
 
         //module before
         $this->moduleContainer->ready();
