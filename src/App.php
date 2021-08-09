@@ -3,6 +3,7 @@
 namespace PUXT;
 
 use Closure;
+use Composer\Autoload\ClassLoader;
 use Exception;
 use JsonSerializable;
 use PHP\Psr7\ServerRequest;
@@ -28,10 +29,12 @@ class App
     private $_hooks = [];
     public $twig;
     protected $twig_extensions = [];
+    public $loader;
 
-    public function __construct(string $root)
+    public function __construct(string $root, ?ClassLoader $loader)
     {
         $this->root = $root;
+        $this->loader = $loader;
         $this->request = new ServerRequest();
 
         if (file_exists($file = $root . "/puxt.config.php")) {
