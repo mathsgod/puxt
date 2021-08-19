@@ -381,7 +381,7 @@ class App
                 echo json_encode($ret, JSON_UNESCAPED_UNICODE);
                 die();
             } else {
-                echo $content;
+                $puxt = $content;
             }
 
 
@@ -393,11 +393,19 @@ class App
             ob_end_clean();
 
             $accept = $this->request->getHeader("accept")[0];
+
             if (strstr($accept, "application/json") || strstr($accept, "*/*")) {
-                header("Content-type: application/json");
-                echo json_encode(["error" => ["message" => $e->getMessage(), "code" => $e->getCode()]]);
+
+                if ($verb == "GET") {
+                    $puxt = $e->getMessage();
+                } else {
+                    header("Content-type: application/json");
+                    echo json_encode(["error" => ["message" => $e->getMessage(), "code" => $e->getCode()]]);
+                    die();
+                }
             } else {
                 echo $e->getMessage();
+                die();
             }
         }
 
@@ -406,7 +414,10 @@ class App
         }
 
         $this->callHook("render:before", $page_loader);
-        $puxt = $page_loader->render("");
+        if (!$puxt) {
+            $puxt = $page_loader->render("");
+        }
+
 
         $this->callHook("render:before", $layout_loader);
         $app = $layout_loader->render($puxt);
