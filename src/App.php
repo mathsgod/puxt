@@ -57,8 +57,6 @@ class App
         $this->context->_get = $_GET;
         $this->context->_post = $this->request->getParsedBody();
 
-        print_r($this->context->_post);
-        die();
         $this->context->_files = $this->request->getUploadedFiles();
 
         $this->moduleContainer = new ModuleContainer($this);
