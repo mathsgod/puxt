@@ -4,19 +4,27 @@ namespace PUXT;
 
 use Closure;
 use Exception;
+use Psr\Http\Message\ServerRequestInterface;
 
-/**
- * @property Route $route
- * @property \PHP\Psr7\ServerRequest $req
-  */
 class Context
 {
     public $params;
     public $query;
     public $_redirected = false;
+
+    /**
+     * @var ServerRequestInterface
+     */
     public $req;
     public $_redirected_url;
+    /**
+     * @var Route
+     */
     public $route = null;
+    public $_get = [];
+    public $_post = [];
+    public $_files = [];
+    public $root;
 
     public function redirect(string $url)
     {

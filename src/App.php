@@ -6,14 +6,19 @@ use Closure;
 use Composer\Autoload\ClassLoader;
 use Exception;
 use JsonSerializable;
-use PHP\Psr7\ServerRequest;
+use Laminas\Diactoros\ServerRequestFactory;
+use Psr\Http\Message\ServerRequestInterface;
 use stdClass;
 use Twig\Extension\ExtensionInterface;
 use Twig\Loader\LoaderInterface;
 
+
 class App
 {
     public $root;
+    /**
+     * @var ServerRequestInterface
+     */
     public $request;
     public $base_path;
     public $document_root;
@@ -31,11 +36,12 @@ class App
     protected $twig_extensions = [];
     public $loader;
 
-    public function __construct(string $root, ?ClassLoader $loader)
+
+    public function __construct(string $root, ?ClassLoader $loader = null)
     {
         $this->root = $root;
         $this->loader = $loader;
-        $this->request = new ServerRequest();
+        $this->request = ServerRequestFactory::fromGlobals();
 
         if (file_exists($file = $root . "/puxt.config.php")) {
             $config = require_once($file);
@@ -50,6 +56,7 @@ class App
         $this->context->root = $root;
         $this->context->_get = $_GET;
         $this->context->_post = $this->request->getParsedBody();
+        $this->context->_files = $this->request->getUploadedFiles();
 
         $this->moduleContainer = new ModuleContainer($this);
 

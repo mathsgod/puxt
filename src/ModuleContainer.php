@@ -10,6 +10,7 @@ use Closure;
 class ModuleContainer
 {
     public $puxt;
+    public $config;
 
     public function __construct(App $puxt)
     {
