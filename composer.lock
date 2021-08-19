@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "afd896190ee735b40ef667ad88d70e4d",
+    "content-hash": "0aae654f2bdd96882af12c074e64509e",
     "packages": [
         {
             "name": "laminas/laminas-diactoros",
@@ -814,41 +814,6 @@
             "time": "2019-11-13T10:30:21+00:00"
         },
         {
-            "name": "hostlink/puxt-db",
-            "version": "1.0.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/HostLink/puxt-db.git",
-                "reference": "ff1233d0026aea23c2b28f76ec15e7c17c587ef6"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/HostLink/puxt-db/zipball/ff1233d0026aea23c2b28f76ec15e7c17c587ef6",
-                "reference": "ff1233d0026aea23c2b28f76ec15e7c17c587ef6",
-                "shasum": ""
-            },
-            "require": {
-                "mathsgod/r-db": "^3.7"
-            },
-            "type": "library",
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Raymond Chong",
-                    "email": "mathsgod@yahoo.com"
-                }
-            ],
-            "description": "puxt db library",
-            "support": {
-                "issues": "https://github.com/HostLink/puxt-db/issues",
-                "source": "https://github.com/HostLink/puxt-db/tree/1.0.1"
-            },
-            "time": "2020-12-28T07:05:02+00:00"
-        },
-        {
             "name": "hostlink/puxt-i18n",
             "version": "1.2.3",
             "source": {
@@ -938,142 +903,6 @@
                 "source": "https://github.com/HostLink/puxt-vue-loader/tree/1.0.0"
             },
             "time": "2021-01-07T06:15:27+00:00"
-        },
-        {
-            "name": "mathsgod/data-structure",
-            "version": "1.4.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/mathsgod/data-structure.git",
-                "reference": "75c7bcabe68a6b77ba43e39400858285a1d69676"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/mathsgod/data-structure/zipball/75c7bcabe68a6b77ba43e39400858285a1d69676",
-                "reference": "75c7bcabe68a6b77ba43e39400858285a1d69676",
-                "shasum": ""
-            },
-            "require": {
-                "mathsgod/php-util": "^1.0",
-                "php": ">=7.3"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^9.5"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "R\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Raymond Chong",
-                    "email": "mathsgod@yahoo.com"
-                }
-            ],
-            "description": "Data structure",
-            "support": {
-                "issues": "https://github.com/mathsgod/data-structure/issues",
-                "source": "https://github.com/mathsgod/data-structure/tree/1.4.0"
-            },
-            "time": "2021-04-08T03:53:44+00:00"
-        },
-        {
-            "name": "mathsgod/php-util",
-            "version": "1.3.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/mathsgod/php-util.git",
-                "reference": "bb878bf9b0c5dbf5154ad71c899cdbd1a05b4df4"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/mathsgod/php-util/zipball/bb878bf9b0c5dbf5154ad71c899cdbd1a05b4df4",
-                "reference": "bb878bf9b0c5dbf5154ad71c899cdbd1a05b4df4",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.3"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^9.5"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "PHP\\Util\\": "src/"
-                },
-                "files": [
-                    "function/function.php"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Raymond Chong",
-                    "email": "mathsgod@yahoo.com"
-                }
-            ],
-            "description": "a simple php util for data structure",
-            "support": {
-                "issues": "https://github.com/mathsgod/php-util/issues",
-                "source": "https://github.com/mathsgod/php-util/tree/1.3.0"
-            },
-            "time": "2021-04-12T04:37:52+00:00"
-        },
-        {
-            "name": "mathsgod/r-db",
-            "version": "3.12.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/mathsgod/r-db.git",
-                "reference": "2789b7338da20489ca1703d281b56cb14e1400c0"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/mathsgod/r-db/zipball/2789b7338da20489ca1703d281b56cb14e1400c0",
-                "reference": "2789b7338da20489ca1703d281b56cb14e1400c0",
-                "shasum": ""
-            },
-            "require": {
-                "ext-pdo": "*",
-                "mathsgod/data-structure": "^1.3",
-                "mathsgod/php-util": "^1.1",
-                "php": ">=7.3",
-                "psr/log": "^1.1"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^9.5"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "R\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "proprietary"
-            ],
-            "authors": [
-                {
-                    "name": "Raymond Chong"
-                }
-            ],
-            "description": "raymond framework db",
-            "support": {
-                "issues": "https://github.com/mathsgod/r-db/issues",
-                "source": "https://github.com/mathsgod/r-db/tree/3.12.0"
-            },
-            "time": "2021-04-29T08:57:58+00:00"
         },
         {
             "name": "mathsgod/r-translate",
