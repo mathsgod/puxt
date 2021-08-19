@@ -391,7 +391,9 @@ class App
         } catch (Exception $e) {
             $content = ob_get_contents();
             ob_end_clean();
-            if ($this->request->getHeader("accept")[0] == "application/json" || $this->request->getHeader("accept")[0] == "*/*") {
+
+            $accept = $this->request->getHeader("accept")[0];
+            if (strstr($accept, "application/json") || strstr($accept, "*/*")) {
                 header("Content-type: application/json");
                 echo json_encode(["error" => ["message" => $e->getMessage(), "code" => $e->getCode()]]);
             } else {
