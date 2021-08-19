@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6d8494424e4a27289a1113fe13521ef9",
+    "content-hash": "afd896190ee735b40ef667ad88d70e4d",
     "packages": [
         {
             "name": "laminas/laminas-diactoros",
@@ -210,6 +210,54 @@
                 "source": "https://github.com/mathsgod/html/tree/1.0.14"
             },
             "time": "2020-12-29T03:04:12+00:00"
+        },
+        {
+            "name": "mathsgod/php-psr7",
+            "version": "2.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/mathsgod/php-psr7.git",
+                "reference": "6737d7942c9e4f1875a680e92cc18e460fe40f3a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/mathsgod/php-psr7/zipball/6737d7942c9e4f1875a680e92cc18e460fe40f3a",
+                "reference": "6737d7942c9e4f1875a680e92cc18e460fe40f3a",
+                "shasum": ""
+            },
+            "require": {
+                "laminas/laminas-diactoros": "^2.6",
+                "php": ">=7.0",
+                "psr/http-message": "^1.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "PHP\\Psr7\\": "src/"
+                },
+                "files": [
+                    "function/function.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Raymond Chong",
+                    "email": "mathsgod@yahoo.com"
+                }
+            ],
+            "description": "A standard implementation of php psr7",
+            "support": {
+                "issues": "https://github.com/mathsgod/php-psr7/issues",
+                "source": "https://github.com/mathsgod/php-psr7/tree/2.0.0"
+            },
+            "time": "2021-08-19T05:01:38+00:00"
         },
         {
             "name": "psr/http-factory",

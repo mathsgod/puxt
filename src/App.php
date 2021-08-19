@@ -6,7 +6,7 @@ use Closure;
 use Composer\Autoload\ClassLoader;
 use Exception;
 use JsonSerializable;
-use Laminas\Diactoros\ServerRequestFactory;
+use PHP\Psr7\ServerRequestFactory;
 use Psr\Http\Message\ServerRequestInterface;
 use stdClass;
 use Twig\Extension\ExtensionInterface;
@@ -56,6 +56,9 @@ class App
         $this->context->root = $root;
         $this->context->_get = $_GET;
         $this->context->_post = $this->request->getParsedBody();
+
+        print_r($this->context->_post);
+        die();
         $this->context->_files = $this->request->getUploadedFiles();
 
         $this->moduleContainer = new ModuleContainer($this);
