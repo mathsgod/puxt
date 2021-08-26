@@ -396,6 +396,13 @@ class App
 
             if (strstr($accept, "application/json") || strstr($accept, "*/*")) {
 
+                if(strstr($accept, "application/json")){
+                    header("Content-type: application/json");
+                    echo json_encode(["error" => ["message" => $e->getMessage(), "code" => $e->getCode()]]);
+                    die();
+                }
+
+                
                 if ($verb == "GET") {
                     $puxt = $e->getMessage();
                 } else {
