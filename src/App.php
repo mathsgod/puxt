@@ -7,6 +7,7 @@ use Composer\Autoload\ClassLoader;
 use Exception;
 use JsonSerializable;
 use Laminas\Diactoros\ResponseFactory;
+use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
 use PHP\Psr7\ServerRequestFactory;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -48,13 +49,13 @@ class App
     protected $twig_extensions = [];
     public $loader;
 
-
     public function __construct(?string $root = null, ?ClassLoader $loader = null)
     {
         if (!$root) {
             $debug = debug_backtrace()[0];
             $root = dirname($debug["file"]);
         }
+
         $this->root = $root;
         $this->loader = $loader;
         $this->request = ServerRequestFactory::fromGlobals();
@@ -396,7 +397,7 @@ class App
             ob_end_clean();
 
             if ($ret instanceof ResponseInterface) {
-
+                $this->emit($ret);
 
                 die();
             }
@@ -509,5 +510,11 @@ class App
         }
 
         return $twig;
+    }
+
+    private function emit(ResponseInterface $response)
+    {
+        $emiter = new SapiEmitter();
+        $emiter->emit($response);
     }
 }

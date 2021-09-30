@@ -26,7 +26,8 @@
         "mathsgod/html": "^1.0",
         "twig/extensions": "^1.5",
         "mathsgod/php-psr7": "^2.0",
-        "psr/http-server-middleware": "^1.0"
+        "psr/http-server-middleware": "^1.0",
+        "laminas/laminas-httphandlerrunner": "^2.1"
     },
     "require-dev": {
         "hostlink/puxt-i18n": "^1.0",
