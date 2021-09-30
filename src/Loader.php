@@ -5,6 +5,9 @@ namespace PUXT;
 use Closure;
 use Exception;
 use Generator;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+use ReflectionClass;
 use ReflectionMethod;
 use ReflectionObject;
 use Twig\TwigFunction;
@@ -333,7 +336,29 @@ class Loader
         if (is_object($this->stub)) {
             $ref_obj = new ReflectionObject($this->stub);
             if ($ref_obj->hasMethod($verb)) {
-                return $ref_obj->getMethod($verb)->invoke($this->stub, $this->context);
+
+                $ref_method = $ref_obj->getMethod($verb);
+
+                $args = [];
+                $context_class = new ReflectionClass($this->context);
+                foreach ($ref_method->getParameters() as $param) {
+                    if ($type = $param->getType()) {
+
+                        if ($type == $context_class->getName()) {
+                            $args[] = $this->context;
+                        } elseif ($type == RequestInterface::class) {
+                            $args[] = $this->context->req;
+                        } elseif ($type == ResponseInterface::class) {
+                            $args[] = $this->context->resp;
+                        } else {
+                            $args[] = null;
+                        }
+                    } else {
+                        $args[] = null;
+                    }
+                }
+
+                return $ref_obj->getMethod($verb)->invoke($this->stub, ...$args);
             }
         } else {
             $func = $this->stub[strtolower($verb)];
