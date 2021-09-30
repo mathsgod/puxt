@@ -17,12 +17,19 @@ use Twig\Loader\LoaderInterface;
 
 class App
 {
+    /**
+     * @var String
+     */
     public $root;
+
     /**
      * @var ServerRequestInterface
      */
     public $request;
 
+    /**
+     * @var ResponseInterface
+     */
     public $response;
 
     public $base_path;
