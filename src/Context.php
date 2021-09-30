@@ -5,6 +5,7 @@ namespace PUXT;
 use Closure;
 use Exception;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
 class Context
 {
@@ -15,7 +16,13 @@ class Context
     /**
      * @var ServerRequestInterface
      */
+
     public $req;
+    /**
+     * @var ResponseInterface
+     */
+    public $res;
+
     public $_redirected_url;
     /**
      * @var Route
@@ -25,6 +32,7 @@ class Context
     public $_post = [];
     public $_files = [];
     public $root;
+
 
     public function redirect(string $url)
     {

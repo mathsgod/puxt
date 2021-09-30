@@ -6,7 +6,9 @@ use Closure;
 use Composer\Autoload\ClassLoader;
 use Exception;
 use JsonSerializable;
+use Laminas\Diactoros\ResponseFactory;
 use PHP\Psr7\ServerRequestFactory;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use stdClass;
 use Twig\Extension\ExtensionInterface;
@@ -20,6 +22,9 @@ class App
      * @var ServerRequestInterface
      */
     public $request;
+
+    public $response;
+
     public $base_path;
     public $document_root;
     public $config = [
@@ -37,11 +42,16 @@ class App
     public $loader;
 
 
-    public function __construct(string $root, ?ClassLoader $loader = null)
+    public function __construct(?string $root = null, ?ClassLoader $loader = null)
     {
+        if (!$root) {
+            $debug = debug_backtrace()[0];
+            $root = dirname($debug["file"]);
+        }
         $this->root = $root;
         $this->loader = $loader;
         $this->request = ServerRequestFactory::fromGlobals();
+        $this->response = (new ResponseFactory)->createResponse();
 
         if (file_exists($file = $root . "/puxt.config.php")) {
             $config = require_once($file);
@@ -90,6 +100,8 @@ class App
         $this->context->params = $route->params;
         $this->context->query = $route->query;
         $this->context->req = $this->request;
+        $this->context->res = $this->response;
+
 
         //plugins
         foreach ($this->config["plugins"] as $plugin) {
@@ -376,6 +388,12 @@ class App
             $content = ob_get_contents();
             ob_end_clean();
 
+            if ($ret instanceof ResponseInterface) {
+
+
+                die();
+            }
+
             if (is_array($ret) || $ret instanceof JsonSerializable) {
                 header("Content-type: application/json");
                 echo json_encode($ret, JSON_UNESCAPED_UNICODE);
@@ -396,13 +414,13 @@ class App
 
             if (strstr($accept, "application/json") || strstr($accept, "*/*")) {
 
-                if(strstr($accept, "application/json")){
+                if (strstr($accept, "application/json")) {
                     header("Content-type: application/json");
                     echo json_encode(["error" => ["message" => $e->getMessage(), "code" => $e->getCode()]]);
                     die();
                 }
 
-                
+
                 if ($verb == "GET") {
                     $puxt = $e->getMessage();
                 } else {
