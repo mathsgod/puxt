@@ -108,7 +108,7 @@ class App
         $this->context->params = $route->params;
         $this->context->query = $route->query;
         $this->context->req = $this->request;
-        $this->context->res = $this->response;
+        $this->context->resp = $this->response;
 
 
         //plugins
@@ -398,19 +398,17 @@ class App
 
             if ($ret instanceof ResponseInterface) {
                 $this->emit($ret);
-
                 die();
             }
 
             if (is_array($ret) || $ret instanceof JsonSerializable) {
-                header("Content-type: application/json");
-                echo json_encode($ret, JSON_UNESCAPED_UNICODE);
+                $this->response = $this->response->withHeader("Content-Type", "application/json");
+                $this->response->getBody()->write(json_encode($ret, JSON_UNESCAPED_UNICODE));
+                $this->emit($this->response);
                 die();
-            } else {
-                $puxt = $content;
             }
 
-
+            $puxt = $content;
             if ($verb == "GET") {
                 $head = $page_loader->getHead($head);
             }

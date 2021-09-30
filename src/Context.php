@@ -21,7 +21,7 @@ class Context
     /**
      * @var ResponseInterface
      */
-    public $res;
+    public $resp;
 
     public $_redirected_url;
     /**
