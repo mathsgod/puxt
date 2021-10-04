@@ -5,6 +5,8 @@ namespace PUXT;
 use Closure;
 use Exception;
 use Generator;
+use JsonSerializable;
+use PHP\Psr7\StringStream;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -82,10 +84,91 @@ class Loader implements RequestHandlerInterface
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-
+        $response = $this->app->response;
         $this->processProps();
         $this->processVerb("created");
-        return $this->app->response;
+
+
+        foreach ($this->middleware as $middleware) {
+
+            $file = $this->app->root . DIRECTORY_SEPARATOR . "middleware" . DIRECTORY_SEPARATOR . $middleware . ".php";
+            if (file_exists($file)) {
+                $m = require_once($file);
+                if ($m instanceof Closure) {
+                    $m->call($this->component, $this->context);
+
+                    if ($context->_redirected) {
+                        $response = $response->withHeader("location", $content->_redirected_url);
+                        return $response;
+                    }
+                }
+            }
+        }
+
+        //--- entry ---
+        $params = $request->getQueryParams();
+        if ($entry = $params["_entry"]) {
+
+            $ret = $this->processEntry($entry);
+
+            $response = $response->withHeader("Content-Type", "application/json");
+            return $response->withBody(new StringStream(json_encode($ret, JSON_UNESCAPED_UNICODE)));
+        }
+
+
+        //--- method ---
+        $verb = $request->getMethod();
+        if ($verb == "GET") { //load layout
+            $layout = $this->getLayout();
+        }
+
+        try {
+            ob_start();
+            $ret = $this->processVerb($verb);
+            $content = ob_get_contents();
+            ob_end_clean();
+        } catch (Exception $e) {
+            $content = ob_get_contents();
+            ob_end_clean();
+
+            throw new Exception($e->getMessage(), $e->getCode());
+        }
+
+
+        if ($ret instanceof ResponseInterface) {
+            return $ret;
+        }
+
+        if (is_array($ret) || $ret instanceof JsonSerializable) {
+            $response = $response->withHeader("Content-Type", "application/json");
+            return $response->withBody(new StringStream(json_encode($ret, JSON_UNESCAPED_UNICODE)));
+        }
+
+        $this->app->callHook("render:before", $this);
+        $response =  $response->withBody(new StringStream($this->render("")));
+
+        if ($verb == "GET") {
+            $response = $response->withBody(new StringStream($layout->render($response->getBody()->getContents())));
+        }
+
+        return $response;
+    }
+
+    public function getLayout(): Loader
+    {
+        $layout = $this->layout ?? "default";
+        if ($this->app->config["layouts"][$layout]) {
+            $layout = $this->config["layouts"][$layout];
+        } else {
+            $layout = "layouts/$layout";
+        }
+        $layouts = glob($this->app->root . "/" . $layout . ".*");
+        if (count($layouts) == 0) { //layout not found
+            $layout = "vendor/mathsgod/puxt/layouts/default";
+        }
+
+        $loader = new Loader($layout, $this->app, $this->context, $this->app->config["head"]);
+        return $loader;
     }
 
     public function processEntry(string $entry)

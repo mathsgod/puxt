@@ -219,9 +219,6 @@ class App
 
         //dynamic route
         if (count(glob($this->root . "/" . $this->config["dir"]["pages"] . "/" . $request_path . ".*")) == 0) {
-
-
-
             $path_path = explode("/", $request_path);
 
             $s = [];
@@ -320,142 +317,19 @@ class App
 
         $this->response = $page_loader->handle($this->request);
 
-
-        
-
-
-        foreach ($page_loader->middleware as $middleware) {
-            $m = require_once($this->root . "/middleware/$middleware.php");
-            if ($m instanceof Closure) {
-                $m->call($this, $context);
-
-                if ($context->_redirected) {
-                    header("location: $context->_redirected_url");
-                    return;
-                }
-            }
+        if (
+            $this->response->getHeaderLine("Content-Type") == "application/json" ||
+            $this->request->getMethod() != "GET"
+        ) {
+            $this->emit($this->response);
+            return;
         }
 
-
-        //process entry
-        $params = $this->request->getQueryParams();
-        if ($params["_entry"]) {
-            try {
-                $ret = $page_loader->processEntry($params["_entry"]);
-            } catch (Exception $e) {
-                $ret = [
-                    "error" =>
-                    [
-                        "code" => $e->getCode(),
-                        "message" => $e->getMessage()
-                    ]
-                ];
-            }
-            header("Content-type: application/json");
-            echo json_encode($ret, JSON_UNESCAPED_UNICODE);
-            die();
-        }
-
-        $verb = $this->request->getMethod();
-
-
-        if ($verb == "GET") {
-            $layout = ($page_loader->layout ?? "default");
-            if ($this->config["layouts"][$layout]) {
-                $layout = $this->config["layouts"][$layout];
-            } else {
-                $layout = "layouts/$layout";
-            }
-            $layouts = glob($this->root . "/" . $layout . ".*");
-
-            if (count($layouts) == 0) { //layout not found
-                $layout = "vendor/mathsgod/puxt/layouts/default";
-            }
-
-            $layout_loader = new Loader($layout, $this, $context, $this->config["head"]);
-            if (is_array($layout_loader->middleware)) {
-                foreach ($layout_loader->middleware as $middleware) {
-                    $m = require_once($this->root . "/middleware/$middleware.php");
-                    if ($m instanceof Closure) {
-                        $m->call($this, $context);
-
-                        if ($context->_redirected) {
-                            header("location: $context->_redirected_url");
-                            return;
-                        }
-                    }
-                }
-            }
-        }
-
-        try {
-            ob_start();
-            $ret = $page_loader->processVerb($verb);
-            $content = ob_get_contents();
-            ob_end_clean();
-
-            if ($ret instanceof ResponseInterface) {
-                $this->emit($ret);
-                die();
-            }
-
-            if (is_array($ret) || $ret instanceof JsonSerializable) {
-                $this->response = $this->response->withHeader("Content-Type", "application/json");
-                $this->response->getBody()->write(json_encode($ret, JSON_UNESCAPED_UNICODE));
-                $this->emit($this->response);
-                die();
-            }
-
-            $puxt = $content;
-            if ($verb == "GET") {
-                $head = $page_loader->getHead($head);
-            }
-        } catch (Exception $e) {
-            $content = ob_get_contents();
-            ob_end_clean();
-
-            $accept = $this->request->getHeader("accept")[0];
-
-            if (strstr($accept, "application/json") || strstr($accept, "*/*")) {
-
-                if (strstr($accept, "application/json")) {
-                    //$this->response=$this->response->withHeader("Content-type","application/json");
-                    header("Content-type: application/json");
-                    echo json_encode(["error" => ["message" => $e->getMessage(), "code" => $e->getCode()]]);
-                    die();
-                }
-
-                if ($verb == "GET") {
-                    $puxt = $e->getMessage();
-                } else {
-                    header("Content-type: application/json");
-                    echo json_encode(["error" => ["message" => $e->getMessage(), "code" => $e->getCode()]]);
-                    die();
-                }
-            } else {
-                echo $e->getMessage();
-                die();
-            }
-        }
-
-        if ($verb != "GET") {
-            exit;
-        }
-
-        $this->callHook("render:before", $page_loader);
-        if (!$puxt) {
-            $puxt = $page_loader->render("");
-        }
-
-
-        $this->callHook("render:before", $layout_loader);
-        $app = $layout_loader->render($puxt);
-
-
+        $head = $page_loader->getHead($head);
         $app_template = $this->getAppTemplate();
 
         $data = [];
-        $data["app"] = $app;
+        $data["app"] = $this->response->getBody()->getContents();
         $data["head"] = $this->generateHeader($head);
         $data["html_attrs"] = $this->generateTagAttr($head["htmlAttrs"] ?? []);
         $data["head_attrs"] = $this->generateTagAttr($head["headAttrs"] ?? []);
