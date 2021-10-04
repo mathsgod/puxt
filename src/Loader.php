@@ -7,13 +7,15 @@ use Exception;
 use Generator;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use ReflectionClass;
 use ReflectionMethod;
 use ReflectionObject;
 use Twig\TwigFunction;
 
 
-class Loader
+class Loader implements RequestHandlerInterface
 {
     public $path;
     public $route;
@@ -76,6 +78,11 @@ class Loader
                 $this->middleware = $this->stub["middleware"] ?? [];
             }
         }
+    }
+
+    public function handle(ServerRequestInterface $request): ResponseInterface
+    {
+        
     }
 
     public function processEntry(string $entry)

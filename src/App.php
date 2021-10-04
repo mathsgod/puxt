@@ -9,6 +9,7 @@ use JsonSerializable;
 use Laminas\Diactoros\ResponseFactory;
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
 use PHP\Psr7\ServerRequestFactory;
+use PHP\Psr7\StringStream;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use stdClass;
@@ -109,8 +110,6 @@ class App
         $this->context->query = $route->query;
         $this->context->req = $this->request;
         $this->context->resp = $this->response;
-
-
         //plugins
         foreach ($this->config["plugins"] as $plugin) {
             if (file_exists($plugin)) {
@@ -124,9 +123,6 @@ class App
                 }
             }
         }
-
-
-
         //module before
         $this->moduleContainer->ready();
     }
@@ -421,11 +417,11 @@ class App
             if (strstr($accept, "application/json") || strstr($accept, "*/*")) {
 
                 if (strstr($accept, "application/json")) {
+                    //$this->response=$this->response->withHeader("Content-type","application/json");
                     header("Content-type: application/json");
                     echo json_encode(["error" => ["message" => $e->getMessage(), "code" => $e->getCode()]]);
                     die();
                 }
-
 
                 if ($verb == "GET") {
                     $puxt = $e->getMessage();
@@ -463,7 +459,9 @@ class App
         $data["head_attrs"] = $this->generateTagAttr($head["headAttrs"] ?? []);
         $data["body_attrs"] = $this->generateTagAttr($head["bodyAttrs"] ?? []);
 
-        echo $app_template->render($data);
+        $this->response = $this->response->withBody(new StringStream($app_template->render($data)));
+        $this->emit($this->response);
+        //echo $app_template->render($data);
     }
 
     private function getAppTemplate()
