@@ -6,6 +6,7 @@ use Closure;
 use Exception;
 use Generator;
 use JsonSerializable;
+use Laminas\Diactoros\ResponseFactory;
 use PHP\Psr7\StringStream;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -29,10 +30,12 @@ class Loader implements RequestHandlerInterface
     public $component;
     public $middleware = [];
     public $app;
+    public $response;
 
-    public function __construct(string $path, App $app, Context $context, $head = [])
+    public function __construct(string $path, App $app, Context $context, $head = [], ResponseInterface $response)
     {
 
+        $this->response = $response;
         $this->path = $path;
         $this->app = $app;
         $this->context = $context;
@@ -84,10 +87,9 @@ class Loader implements RequestHandlerInterface
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $response = $this->app->response;
+        $response = $this->response;
         $this->processProps();
         $this->processVerb("created");
-
 
         foreach ($this->middleware as $middleware) {
 

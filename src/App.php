@@ -313,9 +313,10 @@ class App
         }
 
 
-        $page_loader = new Loader($page, $this, $context);
+        $page_loader = new Loader($page, $this, $context, [], $this->response);
 
         $this->response = $page_loader->handle($this->request);
+
 
         if (
             $this->response->getHeaderLine("Content-Type") == "application/json" ||
