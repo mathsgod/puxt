@@ -82,21 +82,16 @@ class Loader implements RequestHandlerInterface
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        
+
+        $this->processProps();
+        $this->processVerb("created");
+        return $this->app->response;
     }
 
     public function processEntry(string $entry)
     {
         if (is_object($this->stub)) {
-
-            $ref_obj = new ReflectionObject($this->stub);
-            if ($ref_obj->hasMethod($entry)) {
-                $ret = $ref_obj->getMethod($entry)->invoke($this->stub, $this->context);
-                if ($ret instanceof Generator) {
-                    $ret = iterator_to_array($ret);
-                }
-                return $ret;
-            }
+            return $this->processVerb($entry);
         } else {
             $act = $this->stub["entries"][$entry];
             if ($act instanceof Closure) {
@@ -152,23 +147,6 @@ class Loader implements RequestHandlerInterface
                     $this->component->$name = $default->call($this->context);
                 }
                 $this->component->$name = array_values($this->component->$name);
-            }
-        }
-    }
-
-    public function processCreated()
-    {
-        if (is_object($this->stub)) {
-
-            $ref_obj = new ReflectionObject($this->stub);
-            if ($ref_obj->hasMethod("created")) {
-                $ref_obj->getMethod("created")->invoke($this->stub, $this->context);
-            }
-        } else {
-            //created
-            $created = $this->stub["created"];
-            if ($created instanceof Closure) {
-                $created->call($this->component, $this->context);
             }
         }
     }

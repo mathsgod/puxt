@@ -318,8 +318,10 @@ class App
 
         $page_loader = new Loader($page, $this, $context);
 
-        $page_loader->processProps();
-        $page_loader->processCreated();
+        $this->response = $page_loader->handle($this->request);
+
+
+        
 
 
         foreach ($page_loader->middleware as $middleware) {
