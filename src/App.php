@@ -338,7 +338,6 @@ class App
 
         $this->response = $this->response->withBody(new StringStream($app_template->render($data)));
         $this->emit($this->response);
-        //echo $app_template->render($data);
     }
 
     private function getAppTemplate()

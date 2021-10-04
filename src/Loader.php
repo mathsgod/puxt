@@ -169,7 +169,7 @@ class Loader implements RequestHandlerInterface
             $layout = "vendor/mathsgod/puxt/layouts/default";
         }
 
-        $loader = new Loader($layout, $this->app, $this->context, $this->app->config["head"]);
+        $loader = new Loader($layout, $this->app, $this->context, $this->app->config["head"], $this->response);
         return $loader;
     }
 
