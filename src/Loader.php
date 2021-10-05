@@ -32,7 +32,7 @@ class Loader implements RequestHandlerInterface
     public $app;
     public $response;
 
-    public function __construct(string $path, App $app, Context $context, $head = [], ResponseInterface $response)
+    public function __construct(string $path, App $app, Context $context, ResponseInterface $response)
     {
 
         $this->response = $response;
@@ -169,7 +169,7 @@ class Loader implements RequestHandlerInterface
             $layout = "vendor/mathsgod/puxt/layouts/default";
         }
 
-        $loader = new Loader($layout, $this->app, $this->context, $this->app->config["head"], $this->response);
+        $loader = new Loader($layout, $this->app, $this->context, $this->response);
         return $loader;
     }
 

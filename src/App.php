@@ -313,7 +313,7 @@ class App
         }
 
 
-        $page_loader = new Loader($page, $this, $context, [], $this->response);
+        $page_loader = new Loader($page, $this, $context, $this->response);
 
         $this->response = $page_loader->handle($this->request);
 
