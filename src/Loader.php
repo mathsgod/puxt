@@ -110,8 +110,13 @@ class Loader implements RequestHandlerInterface
         //--- entry ---
         $params = $request->getQueryParams();
         if ($entry = $params["_entry"]) {
-
-            $ret = $this->processEntry($entry);
+            try {
+                $ret = $this->processEntry($entry);
+            } catch (Exception $e) {
+                $code = $e->getCode();
+                $response = $response->withStatus($code ? $code : 400, $e->getMessage());
+                return $response;
+            }
 
             $response = $response->withHeader("Content-Type", "application/json");
             return $response->withBody(new StringStream(json_encode($ret, JSON_UNESCAPED_UNICODE)));
