@@ -314,8 +314,19 @@ class App
 
 
         $page_loader = new Loader($page, $this, $context, $this->response);
+        try {
+            $this->response = $page_loader->handle($this->request);
+        } catch (Exception $e) {
+            $code = $e->getCode();
+            if ($code < 100 || $code > 599) {
+                $code = 400;
+            }
+            $this->response = $this->response->withStatus($code, $e->getMessage());
+            return $this->emit($this->response);
+        }
 
-        $this->response = $page_loader->handle($this->request);
+
+
 
 
         if (
