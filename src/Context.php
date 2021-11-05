@@ -16,7 +16,12 @@ class Context
     /**
      * @var ServerRequestInterface
      */
+    public $request;
 
+    /**
+     * @deprecated use $request
+     * @var ServerRequestInterface
+     */
     public $req;
     /**
      * @var ResponseInterface

@@ -109,6 +109,7 @@ class App
         $this->context->params = $route->params;
         $this->context->query = $route->query;
         $this->context->req = $this->request;
+        $this->context->request = $this->request;
         $this->context->resp = $this->response;
         //plugins
         foreach ($this->config["plugins"] as $plugin) {
