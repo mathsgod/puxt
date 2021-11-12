@@ -110,6 +110,9 @@ class Loader implements RequestHandlerInterface
         $params = $request->getQueryParams();
         if ($entry = $params["_entry"]) {
             $ret = $this->processEntry($entry);
+            if ($ret instanceof ResponseInterface) {
+                return $ret;
+            }
             $response = $response->withHeader("Content-Type", "application/json");
             $response->getBody()->write(json_encode($ret, JSON_UNESCAPED_UNICODE));
             return $response;
@@ -130,11 +133,9 @@ class Loader implements RequestHandlerInterface
         } catch (Exception $e) {
             $content = ob_get_contents();
             ob_end_clean();
-
             throw new Exception($e->getMessage(), $e->getCode());
         }
-
-
+        
         if ($ret instanceof ResponseInterface) {
             return $ret;
         }
@@ -391,7 +392,7 @@ class Loader implements RequestHandlerInterface
                         if ($type == $context_class->getName()) {
                             $args[] = $this->context;
                         } elseif ($type == RequestInterface::class) {
-                            $args[] = $this->context->req;
+                            $args[] = $this->context->request;
                         } elseif ($type == ResponseInterface::class) {
                             $args[] = $this->context->resp;
                         } else {
