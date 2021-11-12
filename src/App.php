@@ -323,11 +323,16 @@ class App
                 $code = 400;
             }
             $this->response = $this->response->withStatus($code, $e->getMessage());
+            $this->response = $this->response->withHeader("Content-Type", "application/json");
+            $this->response->getBody()->write(json_encode([
+                "error" => [
+                    "code" => $code,
+                    "message" => $e->getMessage()
+                ],
+            ]));
+
             return $this->emit($this->response);
         }
-
-
-
 
 
         if (

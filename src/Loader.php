@@ -110,16 +110,10 @@ class Loader implements RequestHandlerInterface
         //--- entry ---
         $params = $request->getQueryParams();
         if ($entry = $params["_entry"]) {
-            try {
-                $ret = $this->processEntry($entry);
-            } catch (Exception $e) {
-                $code = $e->getCode();
-                $response = $response->withStatus($code ? $code : 400, $e->getMessage());
-                return $response;
-            }
-
+            $ret = $this->processEntry($entry);
             $response = $response->withHeader("Content-Type", "application/json");
-            return $response->withBody(new StringStream(json_encode($ret, JSON_UNESCAPED_UNICODE)));
+            $response->getBody()->write(json_encode($ret, JSON_UNESCAPED_UNICODE));
+            return $response;
         }
 
 
@@ -148,7 +142,8 @@ class Loader implements RequestHandlerInterface
 
         if (is_array($ret) || $ret instanceof JsonSerializable) {
             $response = $response->withHeader("Content-Type", "application/json");
-            return $response->withBody(new StringStream(json_encode($ret, JSON_UNESCAPED_UNICODE)));
+            $response->getBody()->write(json_encode($ret, JSON_UNESCAPED_UNICODE));
+            return $response;
         }
 
         $this->app->callHook("render:before", $this);
