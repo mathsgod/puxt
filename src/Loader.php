@@ -6,7 +6,6 @@ use Closure;
 use Exception;
 use Generator;
 use JsonSerializable;
-use Laminas\Diactoros\ResponseFactory;
 use PHP\Psr7\StringStream;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -376,32 +375,7 @@ class Loader implements RequestHandlerInterface
         return $ret;
     }
 
-    public function processGet()
-    {
-        return $this->processVerb("get");
-    }
-
-    public function processPost()
-    {
-        return $this->processVerb("post");
-    }
-
-    public function processPut()
-    {
-        return $this->processVerb("put");
-    }
-
-    public function processDelete()
-    {
-        return $this->processVerb("delete");
-    }
-
-    public function processPatch()
-    {
-        return $this->processVerb("patch");
-    }
-
-    public function processVerb(string $verb)
+    private function processVerb(string $verb)
     {
         if (is_object($this->stub)) {
             $ref_obj = new ReflectionObject($this->stub);
