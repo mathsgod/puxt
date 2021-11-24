@@ -125,7 +125,30 @@ class App
             }
         }
         //module before
-        $this->moduleContainer->ready();
+        try {
+            $this->moduleContainer->ready();
+        } catch (Exception $e) {
+            $this->emitException($e);
+            exit;
+        }
+    }
+
+    function emitException(Exception $e)
+    {
+        $code = $e->getCode();
+        if ($code < 100 || $code > 599) {
+            $code = 400;
+        }
+        $this->response = $this->response->withStatus($code, $e->getMessage());
+        $this->response = $this->response->withHeader("Content-Type", "application/json");
+        $this->response->getBody()->write(json_encode([
+            "error" => [
+                "code" => $code,
+                "message" => $e->getMessage()
+            ],
+        ]));
+
+        return $this->emit($this->response);
     }
 
     public function addExtension(ExtensionInterface $extension)
@@ -318,20 +341,8 @@ class App
         try {
             $this->response = $page_loader->handle($this->request);
         } catch (Exception $e) {
-            $code = $e->getCode();
-            if ($code < 100 || $code > 599) {
-                $code = 400;
-            }
-            $this->response = $this->response->withStatus($code, $e->getMessage());
-            $this->response = $this->response->withHeader("Content-Type", "application/json");
-            $this->response->getBody()->write(json_encode([
-                "error" => [
-                    "code" => $code,
-                    "message" => $e->getMessage()
-                ],
-            ]));
-
-            return $this->emit($this->response);
+            $this->emitException($e);
+            return;
         }
 
 
