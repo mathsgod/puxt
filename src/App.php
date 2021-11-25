@@ -5,7 +5,6 @@ namespace PUXT;
 use Closure;
 use Composer\Autoload\ClassLoader;
 use Exception;
-use JsonSerializable;
 use Laminas\Diactoros\ResponseFactory;
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
 use League\Flysystem\DirectoryAttributes;
@@ -67,7 +66,6 @@ class App implements RequestHandlerInterface
         $this->root = $root;
         $this->loader = $loader;
         $this->request = ServerRequestFactory::fromGlobals();
-        $this->response = (new ResponseFactory)->createResponse();
 
         if (file_exists($file = $root . "/puxt.config.php")) {
             $config = require_once($file);
@@ -115,9 +113,8 @@ class App implements RequestHandlerInterface
         $this->context->route = $route;
         $this->context->params = $route->params;
         $this->context->query = $route->query;
-        $this->context->req = $this->request;
         $this->context->request = $this->request;
-        $this->context->resp = $this->response;
+
         //plugins
         foreach ($this->config["plugins"] as $plugin) {
             if (file_exists($plugin)) {
@@ -151,6 +148,21 @@ class App implements RequestHandlerInterface
             $response = $this->router->dispatch($request);
         } catch (NotFoundException $e) {
             return (new ResponseFactory)->createResponse(404);
+        } catch (Exception $e) {
+            $code = $e->getCode();
+            if ($code < 100 || $code > 599) {
+                $code = 500;
+            }
+
+            $response = (new ResponseFactory)->createResponse(500);
+            $response = $response->withHeader("Content-Type", "application/json");
+            $response->getBody()->write(json_encode([
+                "error" => [
+                    "code" => $code,
+                    "message" => $e->getMessage()
+                ],
+            ]));
+            return $response;
         }
 
         if (
@@ -173,6 +185,7 @@ class App implements RequestHandlerInterface
         $response = $response->withBody(new StringStream($app_template->render($data)));
         return $response;
     }
+
 
     private function getDefaultRouter(): Router
     {
@@ -278,7 +291,7 @@ class App implements RequestHandlerInterface
                     //get extension
                     $ext = pathinfo($d["basepath"], PATHINFO_EXTENSION);
                     $path = substr($d["basepath"], 0, - (strlen($ext) + 1));
-                    
+
                     $loader = new Loader($path, $this, $this->context);
                     return $loader->handle($request);
                 });
