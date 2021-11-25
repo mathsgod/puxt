@@ -6,6 +6,7 @@ use Closure;
 use Exception;
 use Generator;
 use JsonSerializable;
+use Laminas\Diactoros\Response;
 use PHP\Psr7\StringStream;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -29,12 +30,10 @@ class Loader implements RequestHandlerInterface
     public $component;
     public $middleware = [];
     public $app;
-    public $response;
 
-    public function __construct(string $path, App $app, Context $context, ResponseInterface $response)
+    public function __construct(string $path, App $app, Context $context)
     {
 
-        $this->response = $response;
         $this->path = $path;
         $this->app = $app;
         $this->context = $context;
@@ -43,6 +42,7 @@ class Loader implements RequestHandlerInterface
         foreach ($this->context as $k => $v) {
             $this->component->{"_" . $k} = $v;
         }
+
 
         if (file_exists($file = $this->path . ".php")) {
 
@@ -86,7 +86,7 @@ class Loader implements RequestHandlerInterface
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $response = $this->response;
+        $response = new Response();
         $this->processProps();
         $this->processVerb("created");
 
@@ -135,7 +135,7 @@ class Loader implements RequestHandlerInterface
             ob_end_clean();
             throw new Exception($e->getMessage(), $e->getCode());
         }
-        
+
         if ($ret instanceof ResponseInterface) {
             return $ret;
         }
@@ -306,6 +306,10 @@ class Loader implements RequestHandlerInterface
 
     public function render($puxt)
     {
+        if (file_exists($this->path . ".html")) {
+            return file_get_contents($this->path . ".html");
+        }
+
         if (file_exists($this->path . ".twig")) {
             $twig = $this->app->getTwig();
         } else {

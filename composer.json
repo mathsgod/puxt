@@ -28,7 +28,9 @@
         "mathsgod/php-psr7": "^2.0",
         "psr/http-server-middleware": "^1.0",
         "laminas/laminas-httphandlerrunner": "^2.1",
-        "psr/http-server-handler": "^1.0"
+        "psr/http-server-handler": "^1.0",
+        "league/route": "^5.1",
+        "league/flysystem": "^2.3"
     },
     "require-dev": {
         "hostlink/puxt-i18n": "^1.0",

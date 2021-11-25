@@ -8,16 +8,21 @@ use Exception;
 use JsonSerializable;
 use Laminas\Diactoros\ResponseFactory;
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
+use League\Flysystem\DirectoryAttributes;
+use League\Flysystem\FileAttributes;
+use League\Flysystem\StorageAttributes;
+use League\Route\Http\Exception\NotFoundException;
+use League\Route\Router;
 use PHP\Psr7\ServerRequestFactory;
 use PHP\Psr7\StringStream;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use stdClass;
 use Twig\Extension\ExtensionInterface;
 use Twig\Loader\LoaderInterface;
 
-
-class App
+class App implements RequestHandlerInterface
 {
     /**
      * @var String
@@ -49,9 +54,11 @@ class App
     public $twig;
     protected $twig_extensions = [];
     public $loader;
+    public $router;
 
     public function __construct(?string $root = null, ?ClassLoader $loader = null)
     {
+
         if (!$root) {
             $debug = debug_backtrace()[0];
             $root = dirname($debug["file"]);
@@ -133,6 +140,167 @@ class App
         }
     }
 
+    function handle(ServerRequestInterface $request): ResponseInterface
+    {
+        if (!$this->router) {
+            //load default router
+            $this->router = $this->getDefaultRouter();
+        }
+
+        try {
+            $response = $this->router->dispatch($request);
+        } catch (NotFoundException $e) {
+            return (new ResponseFactory)->createResponse(404);
+        }
+
+        if (
+            $response->getHeaderLine("Content-Type") === "application/json" ||
+            $request->getMethod() != "GET"
+        ) {
+            return $response;
+        }
+
+        $head = $this->config["head"] ?? [];
+
+        $app_template = $this->getAppTemplate();
+        $data = [];
+        $data["app"] = $response->getBody()->getContents();
+        $data["head"] = $this->generateHeader($head);
+        $data["html_attrs"] = $this->generateTagAttr($head["htmlAttrs"] ?? []);
+        $data["head_attrs"] = $this->generateTagAttr($head["headAttrs"] ?? []);
+        $data["body_attrs"] = $this->generateTagAttr($head["bodyAttrs"] ?? []);
+
+        $response = $response->withBody(new StringStream($app_template->render($data)));
+        return $response;
+    }
+
+    private function getDefaultRouter(): Router
+    {
+        $router = new Router();
+
+        $base_path = $this->root . DIRECTORY_SEPARATOR . $this->config["dir"]["pages"];
+        $adapter = new \League\Flysystem\Local\LocalFilesystemAdapter($base_path);
+        $fs = new \League\Flysystem\Filesystem($adapter);
+
+        $dirs = $fs->listContents('/', true)->filter(function (StorageAttributes $attributes) {
+            return $attributes->isDir();
+        })->map(function (DirectoryAttributes $attributes) use ($base_path) {
+            return [
+                "path" => $attributes->path(),
+            ];
+        })->toArray();
+
+        foreach ($dirs as $dir) {
+            if ($fs->fileExists($dir["path"] . DIRECTORY_SEPARATOR . "index.php")) {
+                $path = $dir["path"];
+
+                $data[] = [
+                    "path" =>  str_replace(DIRECTORY_SEPARATOR, "/", $path) . "/",
+                    "file" => $base_path . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . "index.php"
+                ];
+            }
+
+            if ($fs->fileExists($dir["path"] . DIRECTORY_SEPARATOR . "index.html")) {
+                $path = $dir["path"];
+                $data[] = [
+                    "path" =>  str_replace(DIRECTORY_SEPARATOR, "/", $path) . "/",
+                    "file" => $base_path . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . "index.html"
+                ];
+            }
+
+
+            if ($fs->fileExists($dir["path"] . DIRECTORY_SEPARATOR . "index.twig")) {
+                $path = $dir["path"];
+                $data[] = [
+                    "path" =>  str_replace(DIRECTORY_SEPARATOR, "/", $path) . "/",
+                    "file" => $base_path . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . "index.twig"
+                ];
+            }
+        }
+
+        $files = $fs->listContents('/', true)->filter(function (StorageAttributes $attributes) {
+            return $attributes->isFile();
+        })->filter(function (FileAttributes $attributes) {
+            $ext = pathinfo($attributes->path(), PATHINFO_EXTENSION);
+            if ($ext == "php") return true;
+            if ($ext == "twig") return true;
+            if ($ext == "html") return true;
+            return false;
+        })->map(function (FileAttributes $attributes) {
+            return ["path" => $attributes->path()];
+        })->toArray();
+
+        foreach ($files as $file) {
+            $path = $file["path"];
+            $path = str_replace(DIRECTORY_SEPARATOR, "/", $path);
+
+            //get extension
+            $ext = pathinfo($path, PATHINFO_EXTENSION);
+
+            $data[] = [
+                "path" => substr($path, 0, - (strlen($ext) + 1)),
+                "file" =>  $base_path . DIRECTORY_SEPARATOR . $file["path"]
+            ];
+        }
+
+        //index
+        if ($fs->fileExists("index.php")) {
+            $data[] = [
+                "path" => "/",
+                "file" => $base_path . DIRECTORY_SEPARATOR . "index.php"
+            ];
+        }
+
+        //group path
+        $ds = [];
+        foreach ($data as $d) {
+            $ds[$d["path"]]["path"] = $d["path"];
+            $ds[$d["path"]]["file"][] = $d["file"];
+            $ds[$d["path"]]["basepath"] = substr($d["file"], strlen($this->root) + 1);
+        }
+
+        $ds = array_values($ds);
+
+        $methods = ["GET", "POST", "PATCH", "PUT", "DELETE"];
+
+
+        foreach ($ds as $d) {
+
+            foreach ($methods as $method) {
+                $path = str_replace("@", ":", $d["path"]);
+
+                $router->map($method, $path, function (ServerRequestInterface $request, array $args) use ($d) {
+
+                    foreach ($args as $k => $v) {
+                        $this->context->params->$k = $v;
+                    }
+
+                    //get extension
+                    $ext = pathinfo($d["basepath"], PATHINFO_EXTENSION);
+                    $path = substr($d["basepath"], 0, - (strlen($ext) + 1));
+                    
+                    $loader = new Loader($path, $this, $this->context);
+                    return $loader->handle($request);
+                });
+            }
+        }
+
+        return $router;
+    }
+
+    function setRouter(Router $router)
+    {
+        $this->router = $router;
+    }
+
+    function getRouter()
+    {
+        if (!$this->router) {
+            $this->router = new Router();
+        }
+        return $this->router;
+    }
+
     function emitException(Exception $e)
     {
         $code = $e->getCode();
@@ -158,7 +326,9 @@ class App
 
     public function run()
     {
-        $this->render($this->context->route->path);
+        $response = $this->handle($this->request);
+        $emiter = new SapiEmitter();
+        $emiter->emit($response);
     }
 
     private function generateTagAttr(array $attrs)
@@ -219,153 +389,6 @@ class App
         $location .= $path;
 
         header("location: $location");
-    }
-
-    public function render(string $request_path)
-    {
-        if ($request_path == "") {
-            $request_path = "index";
-        }
-
-        if (substr($request_path, -1) == "/") {
-            $request_path .=  "index";
-        }
-
-        if (substr($request_path, 0, 1) == "/") {
-            $request_path = substr($request_path, 1);
-        }
-
-        $head = $this->config["head"] ?? [];
-        if ($this->context->i18n) {
-            $head["base"] = ["href" => "/" . $this->context->i18n->language . "/"];
-        }
-        $context = $this->context;
-
-        //dynamic route
-        if (count(glob($this->root . "/" . $this->config["dir"]["pages"] . "/" . $request_path . ".*")) == 0) {
-            $path_path = explode("/", $request_path);
-
-            $s = [];
-            $test_path = [];
-
-            foreach ($path_path as $i => $path) {
-                $s[] = $path;
-                $test_path[] = [
-                    "test" => implode("/", $s) . "/_*",
-                    "path" => $path,
-                    "suffix" => array_slice($path_path, $i + 1)
-                ];
-            }
-
-            $test_path = array_reverse($test_path);
-
-
-            foreach ($test_path as $test) {
-                if (count($files = glob($this->root . "/" . $this->config["dir"]["pages"] . "/" . $test["test"]))) {
-                    $value = array_shift($test["suffix"]);
-
-                    $f = $test["test"] . "/" . implode("/", $test["suffix"]);
-                    $file = $files[0];
-                    if (is_file($file)) {
-                        $file = $files[0];
-                        $file = substr($file, strlen($this->root . "/" . $this->config["dir"]["pages"] . "/"));
-
-                        $ext = pathinfo($file, PATHINFO_EXTENSION);
-                        $file = substr($file, 0, -strlen($ext) - 1);
-
-                        $s = explode("_*", $f);
-                        $fa = substr($file, strlen($s[0]));
-
-
-                        $g = explode($s[1], $fa);
-
-                        $name = substr($g[0], 1);
-
-                        $context->route->params->$name = $value;
-
-                        $request_path = $file;
-                        break;
-                    }
-
-
-
-                    if (count($files = glob($this->root . "/" . $this->config["dir"]["pages"] . "/" . $test["test"] . "/" . implode("/", $test["suffix"]) . ".*"))) {
-                        $file = $files[0];
-                        $file = substr($file, strlen($this->root . "/" . $this->config["dir"]["pages"] . "/"));
-
-                        $ext = pathinfo($file, PATHINFO_EXTENSION);
-                        $file = substr($file, 0, -strlen($ext) - 1);
-
-                        $s = explode("_*", $f);
-                        $fa = substr($file, strlen($s[0]));
-
-
-                        $g = explode($s[1], $fa);
-
-                        $name = substr($g[0], 1);
-
-                        $context->route->params->$name = $value;
-
-                        $request_path = $file;
-                        break;
-                    }
-                }
-            }
-        }
-
-        //error page handle
-        $page = $this->config["dir"]["pages"] . "/" . $request_path;
-        $pages = glob($this->root . "/$page.*");
-
-
-        if (count($pages) == 0) {
-            $pages = glob($this->root . "/$page/index.*");
-
-            if (count($pages) != 0) {
-                $this->redirect("$request_path/");
-                return;
-            }
-        }
-
-        if (count($pages) == 0) { //page not found
-            if ($request_path == "error") { //error page not found,load default
-                $page = "vendor/mathsgod/puxt/pages/error";
-            } else {
-                $this->redirect("error");
-                return;
-            }
-        }
-
-
-        $page_loader = new Loader($page, $this, $context, $this->response);
-        try {
-            $this->response = $page_loader->handle($this->request);
-        } catch (Exception $e) {
-            $this->emitException($e);
-            return;
-        }
-
-
-        if (
-            $this->response->getHeaderLine("Content-Type") == "application/json" ||
-            $this->request->getMethod() != "GET"
-        ) {
-            $this->emit($this->response);
-            return;
-        }
-
-        $head = $page_loader->getHead($head);
-        $app_template = $this->getAppTemplate();
-
-        $data = [];
-        $data["app"] = $this->response->getBody()->getContents();
-        $data["head"] = $this->generateHeader($head);
-        $data["html_attrs"] = $this->generateTagAttr($head["htmlAttrs"] ?? []);
-        $data["head_attrs"] = $this->generateTagAttr($head["headAttrs"] ?? []);
-        $data["body_attrs"] = $this->generateTagAttr($head["bodyAttrs"] ?? []);
-
-        $this->response = $this->response->withBody(new StringStream($app_template->render($data)));
-        $this->emit($this->response);
     }
 
     private function getAppTemplate()
