@@ -294,7 +294,7 @@ class App implements RequestHandlerInterface
                     $path = substr($d["basepath"], 0, - (strlen($ext) + 1));
 
 
-                    $loader = $this->createdLoader($path, $d["basepath"]);
+                    $loader = $this->createLoader($path, $d["basepath"]);
                     return $loader->handle($request);
                 });
             }
@@ -456,7 +456,7 @@ class App implements RequestHandlerInterface
         $emiter->emit($response);
     }
 
-    function createdLoader(string $file, string $base): RequestHandlerInterface
+    function createLoader(string $file, string $base): RequestHandlerInterface
     {
         $loader = new Loader($file, $base, $this, $this->context);
         return $loader;
