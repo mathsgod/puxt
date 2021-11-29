@@ -268,18 +268,30 @@ class App implements RequestHandlerInterface
         //group path
         $ds = [];
         foreach ($data as $d) {
+            $ext = pathinfo($d["file"], PATHINFO_EXTENSION);
             $ds[$d["path"]]["path"] = $d["path"];
-            $ds[$d["path"]]["file"][] = $d["file"];
-            $ds[$d["path"]]["basepath"] = substr($d["file"], strlen($this->root) + 1);
+            $ds[$d["path"]]["file"][$ext] = $d["file"];
         }
 
         $ds = array_values($ds);
 
         $methods = ["GET", "POST", "PATCH", "PUT", "DELETE"];
 
-
+        $data = [];
         foreach ($ds as $d) {
+            $dd = ["path" => $d["path"]];
+            if ($d["file"]["php"]) {
+                $dd["file"] = $d["file"]["php"];
+            } elseif ($d["file"]["twig"]) {
+                $dd["file"] = $d["file"]["twig"];
+            } elseif ($d["file"]["html"]) {
+                $dd["file"] = $d["file"]["html"];
+            }
 
+            $data[] = $dd;
+        }
+
+        foreach ($data as $d) {
             foreach ($methods as $method) {
                 $path = str_replace("@", ":", $d["path"]);
 
@@ -288,14 +300,16 @@ class App implements RequestHandlerInterface
                     foreach ($args as $k => $v) {
                         $this->context->params->$k = $v;
                     }
+                    $request = $request->withAttribute("context", $this->context);
 
-                    //get extension
-                    $ext = pathinfo($d["basepath"], PATHINFO_EXTENSION);
-                    $path = substr($d["basepath"], 0, - (strlen($ext) + 1));
+                    $twig = $this->getTwig(new \Twig\Loader\FilesystemLoader(dirname($d["file"])));
+                    $request = $request->withAttribute("twig", $twig);
 
 
-                    $loader = $this->createLoader($path, $d["basepath"]);
-                    return $loader->handle($request);
+                    $handler = new RequestHandler($d["file"]);
+
+
+                    return $handler->handle($request);
                 });
             }
         }
@@ -443,6 +457,7 @@ class App implements RequestHandlerInterface
         }
 
         $twig = new \Twig\Environment($loader, ["debug" => true]);
+
         foreach ($this->twig_extensions as $ext) {
             $twig->addExtension($ext);
         }
@@ -456,9 +471,7 @@ class App implements RequestHandlerInterface
         $emiter->emit($response);
     }
 
-    function createLoader(string $file, string $base): RequestHandlerInterface
+    function getRequestHandler(string $file): RequestHandlerInterface
     {
-        $loader = new Loader($file, $base, $this, $this->context);
-        return $loader;
     }
 }
