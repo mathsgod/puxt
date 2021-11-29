@@ -182,6 +182,7 @@ class App implements RequestHandlerInterface
         $data["head_attrs"] = $this->generateTagAttr($head["headAttrs"] ?? []);
         $data["body_attrs"] = $this->generateTagAttr($head["bodyAttrs"] ?? []);
 
+
         $response = $response->withBody(new StringStream($app_template->render($data)));
         return $response;
     }
@@ -292,7 +293,8 @@ class App implements RequestHandlerInterface
                     $ext = pathinfo($d["basepath"], PATHINFO_EXTENSION);
                     $path = substr($d["basepath"], 0, - (strlen($ext) + 1));
 
-                    $loader = new Loader($path, $this, $this->context);
+
+                    $loader = $this->createdLoader($path, $d["basepath"]);
                     return $loader->handle($request);
                 });
             }
@@ -452,5 +454,11 @@ class App implements RequestHandlerInterface
     {
         $emiter = new SapiEmitter();
         $emiter->emit($response);
+    }
+
+    function createdLoader(string $file, string $base): RequestHandlerInterface
+    {
+        $loader = new Loader($file, $base, $this, $this->context);
+        return $loader;
     }
 }

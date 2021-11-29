@@ -30,18 +30,21 @@ class Loader implements RequestHandlerInterface
     public $component;
     public $middleware = [];
     public $app;
+    private $base;
 
-    public function __construct(string $path, App $app, Context $context)
+
+    public function __construct(string $path, string $base, App $app, Context $context)
     {
-
         $this->path = $path;
         $this->app = $app;
         $this->context = $context;
+        $this->base = $base;
 
         $this->component = new Component();
         foreach ($this->context as $k => $v) {
             $this->component->{"_" . $k} = $v;
         }
+
 
 
         if (file_exists($file = $this->path . ".php")) {
@@ -169,7 +172,7 @@ class Loader implements RequestHandlerInterface
             $layout = "vendor/mathsgod/puxt/layouts/default";
         }
 
-        $loader = new Loader($layout, $this->app, $this->context, $this->response);
+        $loader = new Loader($layout, $this->base, $this->app, $this->context);
         return $loader;
     }
 
