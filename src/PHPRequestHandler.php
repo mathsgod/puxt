@@ -22,6 +22,7 @@ class PHPRequestHandler implements RequestHandlerInterface
     private $stub;
     private $twig;
     private $context;
+    private $layout;
 
     function __construct(string $file)
     {
@@ -31,6 +32,8 @@ class PHPRequestHandler implements RequestHandlerInterface
         $this->stub = require($file);
         $this->twig_content = ob_get_contents();
         ob_end_clean();
+
+        $this->layout = $this->stub->layout ?? "default";
     }
 
     function handle(ServerRequestInterface $request): ResponseInterface
@@ -101,6 +104,7 @@ class PHPRequestHandler implements RequestHandlerInterface
         $response =  $response->withBody(new StringStream($this->render("")));
 
         if ($verb == "GET") {
+            
             //    $response = $response->withBody(new StringStream($layout->render($response->getBody()->getContents())));
         }
         return $response;
