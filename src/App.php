@@ -200,38 +200,20 @@ class App implements RequestHandlerInterface
 
         $dirs = $fs->listContents('/', true)->filter(function (StorageAttributes $attributes) {
             return $attributes->isDir();
+        })->filter(function (DirectoryAttributes $dir) use ($fs) {
+            $path = $dir["path"];
+            return $fs->fileExists($path . "/index.twig")
+                || $fs->fileExists($path . "/index.php")
+                || $fs->fileExists($path . "/index.html");
         })->map(function (DirectoryAttributes $attributes) use ($base_path) {
-            return [
-                "path" => $attributes->path(),
-            ];
+            return  ["path" => $attributes->path()];
         })->toArray();
 
+        $data = [];
         foreach ($dirs as $dir) {
-            if ($fs->fileExists($dir["path"] . DIRECTORY_SEPARATOR . "index.php")) {
-                $path = $dir["path"];
-
-                $data[] = [
-                    "path" =>  str_replace(DIRECTORY_SEPARATOR, "/", $path) . "/",
-                    "file" => $base_path . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . "index.php"
-                ];
-            }
-
-            if ($fs->fileExists($dir["path"] . DIRECTORY_SEPARATOR . "index.html")) {
-                $path = $dir["path"];
-                $data[] = [
-                    "path" =>  str_replace(DIRECTORY_SEPARATOR, "/", $path) . "/",
-                    "file" => $base_path . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . "index.html"
-                ];
-            }
-
-
-            if ($fs->fileExists($dir["path"] . DIRECTORY_SEPARATOR . "index.twig")) {
-                $path = $dir["path"];
-                $data[] = [
-                    "path" =>  str_replace(DIRECTORY_SEPARATOR, "/", $path) . "/",
-                    "file" => $base_path . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . "index.twig"
-                ];
-            }
+            $path = $dir["path"];
+            $p = str_replace(DIRECTORY_SEPARATOR, "/", $path) . "/";
+            $data[$p] = $base_path . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . "index";
         }
 
         $files = $fs->listContents('/', true)->filter(function (StorageAttributes $attributes) {
@@ -248,12 +230,13 @@ class App implements RequestHandlerInterface
             return $path;
         })->toArray();
 
-        $data = [];
+
         $files = array_unique($files);
         foreach ($files as $s) {
-            $data[$s] = $s;
+            $data[$s] = $base_path . DIRECTORY_SEPARATOR . $s;
         }
-        //index
+
+        //root index
         if ($fs->fileExists("index.php") || $fs->fileExists("index.html") || $fs->fileExists("index.twig")) {
             $data["/"] = $base_path . DIRECTORY_SEPARATOR . "index";
         }

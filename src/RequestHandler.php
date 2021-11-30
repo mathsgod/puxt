@@ -24,7 +24,7 @@ class RequestHandler implements RequestHandlerInterface
         } elseif (file_exists($file . ".html")) {
             $this->handler = new HTMLRequestHandler($file . ".html");
         } else {
-            throw new \Exception("Not found");
+            throw new \Exception("Not found file: " . $file . " .php, .twig or .html");
         }
     }
 

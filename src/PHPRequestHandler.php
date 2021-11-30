@@ -4,6 +4,7 @@ namespace PUXT;
 
 use Closure;
 use Exception;
+use Generator;
 use JsonSerializable;
 use Laminas\Diactoros\Response;
 use PHP\Psr7\StringStream;
