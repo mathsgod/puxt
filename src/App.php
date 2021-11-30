@@ -139,10 +139,12 @@ class App implements RequestHandlerInterface
 
     function handle(ServerRequestInterface $request): ResponseInterface
     {
+
         if (!$this->router) {
             //load default router
             $this->router = $this->getDefaultRouter();
         }
+
 
         try {
             $response = $this->router->dispatch($request);
@@ -236,79 +238,42 @@ class App implements RequestHandlerInterface
             return $attributes->isFile();
         })->filter(function (FileAttributes $attributes) {
             $ext = pathinfo($attributes->path(), PATHINFO_EXTENSION);
-            if ($ext == "php") return true;
-            if ($ext == "twig") return true;
-            if ($ext == "html") return true;
-            return false;
+            return $ext == "php" || $ext == "html" || $ext == "twig";
         })->map(function (FileAttributes $attributes) {
-            return ["path" => $attributes->path()];
+            $path = $attributes->path();
+            //find ext
+            $ext = pathinfo($path, PATHINFO_EXTENSION);
+            //remove all extension
+            $path = substr($path, 0, -strlen($ext) - 1);
+            return $path;
         })->toArray();
 
-        foreach ($files as $file) {
-            $path = $file["path"];
-            $path = str_replace(DIRECTORY_SEPARATOR, "/", $path);
-
-            //get extension
-            $ext = pathinfo($path, PATHINFO_EXTENSION);
-
-            $data[] = [
-                "path" => substr($path, 0, - (strlen($ext) + 1)),
-                "file" =>  $base_path . DIRECTORY_SEPARATOR . $file["path"]
-            ];
+        $data = [];
+        $files = array_unique($files);
+        foreach ($files as $s) {
+            $data[$s] = $s;
         }
-
         //index
-        if ($fs->fileExists("index.php")) {
-            $data[] = [
-                "path" => "/",
-                "file" => $base_path . DIRECTORY_SEPARATOR . "index.php"
-            ];
+        if ($fs->fileExists("index.php") || $fs->fileExists("index.html") || $fs->fileExists("index.twig")) {
+            $data["/"] = $base_path . DIRECTORY_SEPARATOR . "index";
         }
-
-        //group path
-        $ds = [];
-        foreach ($data as $d) {
-            $ext = pathinfo($d["file"], PATHINFO_EXTENSION);
-            $ds[$d["path"]]["path"] = $d["path"];
-            $ds[$d["path"]]["file"][$ext] = $d["file"];
-        }
-
-        $ds = array_values($ds);
 
         $methods = ["GET", "POST", "PATCH", "PUT", "DELETE"];
-
-        $data = [];
-        foreach ($ds as $d) {
-            $dd = ["path" => $d["path"]];
-            if ($d["file"]["php"]) {
-                $dd["file"] = $d["file"]["php"];
-            } elseif ($d["file"]["twig"]) {
-                $dd["file"] = $d["file"]["twig"];
-            } elseif ($d["file"]["html"]) {
-                $dd["file"] = $d["file"]["html"];
-            }
-
-            $data[] = $dd;
-        }
-
-        foreach ($data as $d) {
+        foreach ($data as $path => $file) {
             foreach ($methods as $method) {
-                $path = str_replace("@", ":", $d["path"]);
+                $path = str_replace("@", ":", $path);
 
-                $router->map($method, $path, function (ServerRequestInterface $request, array $args) use ($d) {
+                $router->map($method, $path, function (ServerRequestInterface $request, array $args) use ($file) {
 
                     foreach ($args as $k => $v) {
                         $this->context->params->$k = $v;
                     }
                     $request = $request->withAttribute("context", $this->context);
 
-                    $twig = $this->getTwig(new \Twig\Loader\FilesystemLoader(dirname($d["file"])));
+                    $twig = $this->getTwig(new \Twig\Loader\FilesystemLoader(dirname($file)));
                     $request = $request->withAttribute("twig", $twig);
 
-
-                    $handler = new RequestHandler($d["file"]);
-
-
+                    $handler = new RequestHandler($file);
                     return $handler->handle($request);
                 });
             }
@@ -469,9 +434,5 @@ class App implements RequestHandlerInterface
     {
         $emiter = new SapiEmitter();
         $emiter->emit($response);
-    }
-
-    function getRequestHandler(string $file): RequestHandlerInterface
-    {
     }
 }

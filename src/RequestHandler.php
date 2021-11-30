@@ -13,18 +13,18 @@ class RequestHandler implements RequestHandlerInterface
      * @var RequestHandlerInterface
      */
     private $handler;
-    private $extension;
 
+    //file without extension
     public function __construct(string $file)
     {
-
-        $this->extension = pathinfo($file, PATHINFO_EXTENSION);
-        if ($this->extension == "php") {
-            $this->handler = new PHPRequestHandler($file);
-        } elseif ($this->extension == "twig") {
-            $this->handler = new TwigRequestHandler($file);
-        } elseif ($this->extension == "html") {
-            $this->handler = new HTMLRequestHandler($file);
+        if (file_exists($file . ".php")) {
+            $this->handler = new PHPRequestHandler($file . ".php");
+        } elseif (file_exists($file . ".twig")) {
+            $this->handler = new TwigRequestHandler($file . ".twig");
+        } elseif (file_exists($file . ".html")) {
+            $this->handler = new HTMLRequestHandler($file . ".html");
+        } else {
+            throw new \Exception("Not found");
         }
     }
 

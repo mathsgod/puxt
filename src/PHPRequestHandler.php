@@ -23,6 +23,7 @@ class PHPRequestHandler implements RequestHandlerInterface
     private $twig;
     private $context;
     private $layout;
+    private $middleware = [];
 
     function __construct(string $file)
     {
@@ -104,7 +105,7 @@ class PHPRequestHandler implements RequestHandlerInterface
         $response =  $response->withBody(new StringStream($this->render("")));
 
         if ($verb == "GET") {
-            
+
             //    $response = $response->withBody(new StringStream($layout->render($response->getBody()->getContents())));
         }
         return $response;
@@ -124,6 +125,7 @@ class PHPRequestHandler implements RequestHandlerInterface
                     if ($type = $param->getType()) {
 
                         if ($type == $context_class->getName()) {
+
                             $args[] = $this->context;
                         } elseif ($type == RequestInterface::class) {
                             $args[] = $this->context->request;
