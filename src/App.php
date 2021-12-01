@@ -203,7 +203,10 @@ class App implements RequestHandlerInterface
     {
         $router = new Router();
 
+
+
         $base_path = $this->root . DIRECTORY_SEPARATOR . $this->config["dir"]["pages"];
+
         $adapter = new \League\Flysystem\Local\LocalFilesystemAdapter($base_path);
         $fs = new \League\Flysystem\Filesystem($adapter);
 
@@ -247,7 +250,7 @@ class App implements RequestHandlerInterface
 
         //root index
         if ($fs->fileExists("index.php") || $fs->fileExists("index.html") || $fs->fileExists("index.twig")) {
-            $data["/"] = $base_path . DIRECTORY_SEPARATOR . "index";
+            $data[""] = $base_path . DIRECTORY_SEPARATOR . "index";
         }
 
         $methods = ["GET", "POST", "PATCH", "PUT", "DELETE"];
@@ -255,7 +258,7 @@ class App implements RequestHandlerInterface
             foreach ($methods as $method) {
                 $path = str_replace("@", ":", $path);
 
-                $router->map($method, $path, function (ServerRequestInterface $request, array $args) use ($file) {
+                $router->map($method, $this->base_path . $path, function (ServerRequestInterface $request, array $args) use ($file) {
 
                     foreach ($args as $k => $v) {
                         $this->context->params->$k = $v;
@@ -270,6 +273,8 @@ class App implements RequestHandlerInterface
                 });
             }
         }
+
+
 
         return $router;
     }
