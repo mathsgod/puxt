@@ -7,9 +7,11 @@ use Exception;
 use Generator;
 use JsonSerializable;
 use Laminas\Diactoros\Response;
+use Laminas\Diactoros\Response\JsonResponse;
 use PHP\Psr7\StringStream;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use ReflectionClass;
 use ReflectionMethod;
@@ -24,7 +26,7 @@ class PHPRequestHandler implements RequestHandlerInterface
     private $twig;
     private $context;
     private $layout;
-    private $middleware = [];
+    public $middleware = [];
 
     function __construct(string $file)
     {
@@ -36,77 +38,74 @@ class PHPRequestHandler implements RequestHandlerInterface
         ob_end_clean();
 
         $this->layout = $this->stub->layout ?? "default";
+
+        foreach ($this->stub->middleware ?? [] as $middleware) {
+            $file = getcwd() . DIRECTORY_SEPARATOR . "middleware" . DIRECTORY_SEPARATOR . $middleware . ".php";
+            if (file_exists($file)) {
+                $this->middleware[] = require($file);
+            }
+        }
     }
 
     function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $this->context = $request->getAttribute("context");
-        $this->twig = $request->getAttribute("twig");
-        $response = new Response();
-        $this->processProps();
-        $this->processVerb("created");
 
-        foreach ($this->middleware as $middleware) {
 
-            $file = $this->app->root . DIRECTORY_SEPARATOR . "middleware" . DIRECTORY_SEPARATOR . $middleware . ".php";
-            if (file_exists($file)) {
-                $m = require_once($file);
-                if ($m instanceof Closure) {
-                    $m->call($this->component, $this->context);
+        if ($this->stub instanceof RequestHandlerInterface) {
+            $response = $this->stub->handle($request);
+        } else {
 
-                    if ($context->_redirected) {
-                        $response = $response->withHeader("location", $content->_redirected_url);
-                        return $response;
-                    }
+            $this->context = $request->getAttribute("context");
+            $this->twig = $request->getAttribute("twig");
+
+            $response = new Response();
+            $this->processProps();
+            $this->processVerb("created");
+
+
+            //--- entry ---
+            $params = $request->getQueryParams();
+            if ($entry = $params["_entry"]) {
+                $ret = $this->processEntry($entry);
+                if ($ret instanceof ResponseInterface) {
+                    return $ret;
                 }
+                return new JsonResponse($ret);
             }
-        }
 
-        //--- entry ---
-        $params = $request->getQueryParams();
-        if ($entry = $params["_entry"]) {
-            $ret = $this->processEntry($entry);
+            //--- method ---
+            $verb = $request->getMethod();
+            if ($verb == "GET") { //load layout
+                //    $layout = $this->getLayout();
+            }
+
+            try {
+                ob_start();
+                $ret = $this->processVerb($verb);
+                $content = ob_get_contents();
+                ob_end_clean();
+            } catch (Exception $e) {
+                $content = ob_get_contents();
+                ob_end_clean();
+                throw new Exception($e->getMessage(), $e->getCode());
+            }
+
             if ($ret instanceof ResponseInterface) {
                 return $ret;
             }
-            $response = $response->withHeader("Content-Type", "application/json");
-            $response->getBody()->write(json_encode($ret, JSON_UNESCAPED_UNICODE));
-            return $response;
-        }
 
+            if (is_array($ret) || $ret instanceof JsonSerializable) {
+                $response = $response->withHeader("Content-Type", "application/json");
+                $response->getBody()->write(json_encode($ret, JSON_UNESCAPED_UNICODE));
+                return $response;
+            }
 
-        //--- method ---
-        $verb = $request->getMethod();
-        if ($verb == "GET") { //load layout
-            //    $layout = $this->getLayout();
-        }
+            //$this->app->callHook("render:before", $this);
+            $response =  $response->withBody(new StringStream($this->render("")));
 
-        try {
-            ob_start();
-            $ret = $this->processVerb($verb);
-            $content = ob_get_contents();
-            ob_end_clean();
-        } catch (Exception $e) {
-            $content = ob_get_contents();
-            ob_end_clean();
-            throw new Exception($e->getMessage(), $e->getCode());
-        }
-
-        if ($ret instanceof ResponseInterface) {
-            return $ret;
-        }
-
-        if (is_array($ret) || $ret instanceof JsonSerializable) {
-            $response = $response->withHeader("Content-Type", "application/json");
-            $response->getBody()->write(json_encode($ret, JSON_UNESCAPED_UNICODE));
-            return $response;
-        }
-
-        //$this->app->callHook("render:before", $this);
-        $response =  $response->withBody(new StringStream($this->render("")));
-
-        if ($verb == "GET") {
-            //    $response = $response->withBody(new StringStream($layout->render($response->getBody()->getContents())));
+            if ($verb == "GET") {
+                //    $response = $response->withBody(new StringStream($layout->render($response->getBody()->getContents())));
+            }
         }
 
         //head

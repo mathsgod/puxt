@@ -5,6 +5,7 @@ namespace PUXT;
 use Closure;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 class RequestHandler implements RequestHandlerInterface
@@ -30,6 +31,17 @@ class RequestHandler implements RequestHandlerInterface
 
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
+        if ($this->handler instanceof PHPRequestHandler) {
+
+            $handler = new QueueRequestHandler($this->handler);
+
+            foreach ($this->handler->middleware as $middleware) {
+                $handler->add($middleware);
+            }
+
+            return $handler->handle($request);
+        }
+
         return $this->handler->handle($request);
     }
 }
