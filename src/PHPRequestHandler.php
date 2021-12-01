@@ -106,9 +106,14 @@ class PHPRequestHandler implements RequestHandlerInterface
         $response =  $response->withBody(new StringStream($this->render("")));
 
         if ($verb == "GET") {
-
             //    $response = $response->withBody(new StringStream($layout->render($response->getBody()->getContents())));
         }
+
+        //head
+        if ($this->stub->head) {
+            $response = $response->withHeader("puxt-head", json_encode($this->stub->head, JSON_UNESCAPED_UNICODE));
+        }
+
         return $response;
     }
 

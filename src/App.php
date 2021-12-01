@@ -5,11 +5,13 @@ namespace PUXT;
 use Closure;
 use Composer\Autoload\ClassLoader;
 use Exception;
+use Laminas\Diactoros\Response\TextResponse;
 use Laminas\Diactoros\ResponseFactory;
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
 use League\Flysystem\DirectoryAttributes;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\StorageAttributes;
+use League\Route\Http\Exception as HttpException;
 use League\Route\Http\Exception\NotFoundException;
 use League\Route\Router;
 use PHP\Psr7\ServerRequestFactory;
@@ -145,11 +147,15 @@ class App implements RequestHandlerInterface
             $this->router = $this->getDefaultRouter();
         }
 
-
         try {
             $response = $this->router->dispatch($request);
-        } catch (NotFoundException $e) {
-            return (new ResponseFactory)->createResponse(404);
+        } catch (HttpException $e) {
+            $code = $e->getCode();
+            if ($code < 100 || $code > 599) {
+                $code = 500;
+            }
+            $response = (new TextResponse(""))->withStatus($code);
+            return $e->buildJsonResponse($response);
         } catch (Exception $e) {
             $code = $e->getCode();
             if ($code < 100 || $code > 599) {
@@ -174,7 +180,12 @@ class App implements RequestHandlerInterface
             return $response;
         }
 
-        $head = $this->config["head"] ?? [];
+        if ($head = $response->getHeaderLine("puxt-head")) {
+            $head = json_decode($head, true);
+            $response = $response->withoutHeader("puxt-head");
+        } else {
+            $head = $this->config["head"] ?? [];
+        }
 
         $app_template = $this->getAppTemplate();
         $data = [];
