@@ -12,7 +12,6 @@ use League\Flysystem\DirectoryAttributes;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\StorageAttributes;
 use League\Route\Http\Exception as HttpException;
-use League\Route\Http\Exception\NotFoundException;
 use League\Route\Router;
 use PHP\Psr7\ServerRequestFactory;
 use PHP\Psr7\StringStream;
@@ -59,7 +58,6 @@ class App implements RequestHandlerInterface
 
     public function __construct(?string $root = null, ?ClassLoader $loader = null)
     {
-
         if (!$root) {
             $debug = debug_backtrace()[0];
             $root = dirname($debug["file"]);
@@ -293,7 +291,7 @@ class App implements RequestHandlerInterface
     {
         $code = $e->getCode();
         if ($code < 100 || $code > 599) {
-            $code = 400;
+            $code = 500;
         }
         $this->response = $this->response->withStatus($code, $e->getMessage());
         $this->response = $this->response->withHeader("Content-Type", "application/json");
@@ -364,19 +362,6 @@ class App implements RequestHandlerInterface
 
 
         return implode("\n", $html);
-    }
-
-    private function redirect(string $path)
-    {
-        $location = $this->base_path;
-
-        if ($this->context->i18n->language) {
-            $location .= $this->context->i18n->language . "/";
-        }
-
-        $location .= $path;
-
-        header("location: $location");
     }
 
     private function getAppTemplate()
