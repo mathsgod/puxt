@@ -140,6 +140,18 @@ class App implements RequestHandlerInterface
     function handle(ServerRequestInterface $request): ResponseInterface
     {
 
+        if ($request->getMethod() == "OPTIONS") {
+            $origin = $_SERVER["HTTP_ORIGIN"];
+
+            $response = new TextResponse("");
+            $response = $response->withHeader("Access-Control-Allow-Credentials", "true")
+                ->withHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, vx-view-as, rest-jwt")
+                ->withHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, HEAD, DELETE")
+                ->withHeader("Access-Control-Expose-Headers", "location, Content-Location")
+                ->withHeader("Access-Control-Allow-Origin", $origin);
+            return $response;
+        }
+
         if (!$this->router) {
             //load default router
             $this->router = $this->getDefaultRouter();
@@ -195,6 +207,13 @@ class App implements RequestHandlerInterface
 
 
         $response = $response->withBody(new StringStream($app_template->render($data)));
+        $origin = $_SERVER["HTTP_ORIGIN"];
+
+        $response = $response->withHeader("Access-Control-Allow-Credentials", "true")
+            ->withHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, vx-view-as, rest-jwt")
+            ->withHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, HEAD, DELETE")
+            ->withHeader("Access-Control-Expose-Headers", "location, Content-Location")
+            ->withHeader("Access-Control-Allow-Origin",$origin);
         return $response;
     }
 
@@ -203,6 +222,8 @@ class App implements RequestHandlerInterface
     {
         $router = new Router();
 
+
+        $router->addPatternMatcher("any", ".+");
 
 
         $base_path = $this->root . DIRECTORY_SEPARATOR . $this->config["dir"]["pages"];
