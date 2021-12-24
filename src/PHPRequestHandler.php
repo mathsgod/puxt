@@ -101,9 +101,9 @@ class PHPRequestHandler implements RequestHandlerInterface
             }
 
             //$this->app->callHook("render:before", $this);
-            $response =  $response->withBody(new StringStream($this->render("")));
-
             if ($verb == "GET") {
+                $response =  $response->withBody(new StringStream($this->render("")));
+
                 //    $response = $response->withBody(new StringStream($layout->render($response->getBody()->getContents())));
             }
         }
