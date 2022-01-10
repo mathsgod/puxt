@@ -74,6 +74,7 @@ class App implements RequestHandlerInterface
             }
         }
 
+        \Dotenv\Dotenv::createImmutable($root)->safeLoad();
 
         $this->context = new Context;
         $this->context->config = $this->config;
@@ -183,6 +184,7 @@ class App implements RequestHandlerInterface
             return $response;
         }
 
+
         if (
             $response->getHeaderLine("Content-Type") === "application/json" ||
             $request->getMethod() != "GET"
@@ -205,15 +207,19 @@ class App implements RequestHandlerInterface
         $data["head_attrs"] = $this->generateTagAttr($head["headAttrs"] ?? []);
         $data["body_attrs"] = $this->generateTagAttr($head["bodyAttrs"] ?? []);
 
-
         $response = $response->withBody(new StringStream($app_template->render($data)));
-        $origin = $_SERVER["HTTP_ORIGIN"];
+        $response = $response->withHeader("Content-Type", "text/html");
+
 
         $response = $response->withHeader("Access-Control-Allow-Credentials", "true")
             ->withHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, vx-view-as, rest-jwt")
             ->withHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, HEAD, DELETE")
-            ->withHeader("Access-Control-Expose-Headers", "location, Content-Location")
-            ->withHeader("Access-Control-Allow-Origin",$origin);
+            ->withHeader("Access-Control-Expose-Headers", "location, Content-Location");
+
+        if ($origin = $_SERVER["HTTP_ORIGIN"]) {
+            $response = $response->withHeader("Access-Control-Allow-Origin", $origin);
+        }
+
         return $response;
     }
 
