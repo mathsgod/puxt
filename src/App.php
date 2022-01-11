@@ -184,31 +184,24 @@ class App implements RequestHandlerInterface
             return $response;
         }
 
+        if ($response->getHeaderLine("Content-Type") === "text/html" && $request->getMethod() === "GET") {
+            if ($head = $response->getHeaderLine("puxt-head")) {
+                $head = json_decode($head, true);
+                $response = $response->withoutHeader("puxt-head");
+            } else {
+                $head = $this->config["head"] ?? [];
+            }
 
-        if (
-            $response->getHeaderLine("Content-Type") === "application/json" ||
-            $request->getMethod() != "GET"
-        ) {
-            return $response;
+            $app_template = $this->getAppTemplate();
+            $data = [];
+            $data["app"] = $response->getBody()->getContents();
+            $data["head"] = $this->generateHeader($head);
+            $data["html_attrs"] = $this->generateTagAttr($head["htmlAttrs"] ?? []);
+            $data["head_attrs"] = $this->generateTagAttr($head["headAttrs"] ?? []);
+            $data["body_attrs"] = $this->generateTagAttr($head["bodyAttrs"] ?? []);
+
+            $response = $response->withBody(new StringStream($app_template->render($data)));
         }
-
-        if ($head = $response->getHeaderLine("puxt-head")) {
-            $head = json_decode($head, true);
-            $response = $response->withoutHeader("puxt-head");
-        } else {
-            $head = $this->config["head"] ?? [];
-        }
-
-        $app_template = $this->getAppTemplate();
-        $data = [];
-        $data["app"] = $response->getBody()->getContents();
-        $data["head"] = $this->generateHeader($head);
-        $data["html_attrs"] = $this->generateTagAttr($head["htmlAttrs"] ?? []);
-        $data["head_attrs"] = $this->generateTagAttr($head["headAttrs"] ?? []);
-        $data["body_attrs"] = $this->generateTagAttr($head["bodyAttrs"] ?? []);
-
-        $response = $response->withBody(new StringStream($app_template->render($data)));
-        $response = $response->withHeader("Content-Type", "text/html");
 
 
         $response = $response->withHeader("Access-Control-Allow-Credentials", "true")
