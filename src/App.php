@@ -338,6 +338,9 @@ class App implements RequestHandlerInterface
     public function run()
     {
         $response = $this->handle($this->request);
+        if ($response->getBody()->isSeekable()) {
+            $response->getBody()->rewind();
+        }
         $emiter = new SapiEmitter();
         $emiter->emit($response);
     }
