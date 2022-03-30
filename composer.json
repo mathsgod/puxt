@@ -22,9 +22,8 @@
     },
     "require": {
         "php": "^7.3 || ~8.0.0",
-        "twig/twig": "^2.12",
+        "twig/twig": "^3.3",
         "mathsgod/html": "^1.0",
-        "twig/extensions": "^1.5",
         "mathsgod/php-psr7": "^2.0",
         "psr/http-server-middleware": "^1.0",
         "laminas/laminas-httphandlerrunner": "^2.1",
@@ -32,10 +31,10 @@
         "league/route": "^5.1",
         "league/flysystem": "^2.3",
         "vlucas/phpdotenv": "^5.4",
-        "league/event": "^3.0"
+        "league/event": "^3.0",
+        "twig/extra-bundle": "^3.3"
     },
     "require-dev": {
-        "hostlink/puxt-i18n": "^1.0",
         "hostlink/puxt-log": "^1.0",
         "hostlink/puxt-vue-loader": "^1.0"
     }
