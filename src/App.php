@@ -8,6 +8,8 @@ use Exception;
 use Laminas\Diactoros\Response\TextResponse;
 use Laminas\Diactoros\ResponseFactory;
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
+use League\Event\EventDispatcherAware;
+use League\Event\EventDispatcherAwareBehavior;
 use League\Flysystem\DirectoryAttributes;
 use League\Flysystem\FileAttributes;
 use League\Flysystem\StorageAttributes;
@@ -22,10 +24,12 @@ use stdClass;
 use Twig\Extension\ExtensionInterface;
 use Twig\Loader\LoaderInterface;
 
-class App implements RequestHandlerInterface
+class App implements RequestHandlerInterface, EventDispatcherAware
 {
+    use EventDispatcherAwareBehavior;
+
     /**
-     * @var String
+     * @var string
      */
     public $root;
 
@@ -81,7 +85,6 @@ class App implements RequestHandlerInterface
         $this->context->root = $root;
         $this->context->_get = $_GET;
         $this->context->_post = $this->request->getParsedBody();
-
         $this->context->_files = $this->request->getUploadedFiles();
 
         $this->moduleContainer = new ModuleContainer($this);

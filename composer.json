@@ -31,7 +31,8 @@
         "psr/http-server-handler": "^1.0",
         "league/route": "^5.1",
         "league/flysystem": "^2.3",
-        "vlucas/phpdotenv": "^5.4"
+        "vlucas/phpdotenv": "^5.4",
+        "league/event": "^3.0"
     },
     "require-dev": {
         "hostlink/puxt-i18n": "^1.0",
