@@ -4,3 +4,5 @@ vendor
 /content/
 /pages/
 /middleware/
+puxt.config.php
+
