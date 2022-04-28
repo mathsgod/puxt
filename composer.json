@@ -31,8 +31,7 @@
         "league/route": "^5.1",
         "league/flysystem": "^2.3",
         "vlucas/phpdotenv": "^5.4",
-        "league/event": "^3.0",
-        "twig/extra-bundle": "^3.3"
+        "league/event": "^3.0"
     },
     "require-dev": {
         "hostlink/puxt-log": "^1.0",
