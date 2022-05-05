@@ -24,8 +24,10 @@ class RequestHandler implements RequestHandlerInterface
             $this->handler = new TwigRequestHandler($file . ".twig");
         } elseif (file_exists($file . ".html")) {
             $this->handler = new HTMLRequestHandler($file . ".html");
+        } elseif (file_exists($file . ".vue")) {
+            $this->handler = new VueRequestHandler($file . ".vue");
         } else {
-            throw new \Exception("Not found file: " . $file . " .php, .twig or .html");
+            throw new \Exception("Not found file: " . $file . " .php, .twig , .html or .vue");
         }
     }
 
