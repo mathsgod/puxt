@@ -34,7 +34,7 @@
         "league/event": "^3.0"
     },
     "require-dev": {
-        "hostlink/puxt-log": "^1.0",
-        "hostlink/puxt-vue-loader": "^1.0"
+        "hostlink/puxt-vue-loader": "^1.0",
+        "psr/log": "^3.0"
     }
 }

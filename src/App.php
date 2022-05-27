@@ -20,13 +20,16 @@ use PHP\Psr7\StringStream;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 use stdClass;
 use Twig\Extension\ExtensionInterface;
 use Twig\Loader\LoaderInterface;
 
-class App implements RequestHandlerInterface, EventDispatcherAware
+class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareInterface
 {
     use EventDispatcherAwareBehavior;
+    use LoggerAwareTrait;
 
     /**
      * @var string
@@ -292,6 +295,11 @@ class App implements RequestHandlerInterface, EventDispatcherAware
                     $request = $request->withAttribute("twig", $twig);
 
                     $handler = new RequestHandler($file);
+
+                    if ($this->logger) {
+                        $handler->setLogger($this->logger);
+                    }
+
                     return $handler->handle($request);
                 });
             }

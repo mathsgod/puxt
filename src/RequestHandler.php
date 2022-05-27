@@ -3,13 +3,18 @@
 namespace PUXT;
 
 use Closure;
+use Exception;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
 
-class RequestHandler implements RequestHandlerInterface
+class RequestHandler implements RequestHandlerInterface, LoggerAwareInterface
 {
+
     /**
      * @var RequestHandlerInterface
      */
@@ -27,7 +32,7 @@ class RequestHandler implements RequestHandlerInterface
         } elseif (file_exists($file . ".vue")) {
             $this->handler = new VueRequestHandler($file . ".vue");
         } else {
-            throw new \Exception("Not found file: " . $file . " .php, .twig , .html or .vue");
+            throw new Exception("Not found file: " . $file . " .php, .twig , .html or .vue");
         }
     }
 
@@ -45,5 +50,12 @@ class RequestHandler implements RequestHandlerInterface
         }
 
         return $this->handler->handle($request);
+    }
+
+    public function setLogger(LoggerInterface $logger): void
+    {
+        if ($this->handler instanceof LoggerAwareInterface) {
+            $this->handler->setLogger($logger);
+        }
     }
 }

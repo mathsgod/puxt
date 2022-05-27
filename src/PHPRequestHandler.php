@@ -13,13 +13,15 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerInterface;
 use ReflectionClass;
 use ReflectionMethod;
 use ReflectionObject;
 use Twig\Environment;
 use Twig\TwigFunction;
 
-class PHPRequestHandler implements RequestHandlerInterface
+class PHPRequestHandler implements RequestHandlerInterface, LoggerAwareInterface
 {
     private $file;
     private $stub;
@@ -47,9 +49,15 @@ class PHPRequestHandler implements RequestHandlerInterface
         }
     }
 
+    public function setLogger(LoggerInterface $logger): void
+    {
+        if ($this->stub instanceof LoggerAwareInterface) {
+            $this->stub->setLogger($logger);
+        }
+    }
+
     function handle(ServerRequestInterface $request): ResponseInterface
     {
-
 
         if ($this->stub instanceof RequestHandlerInterface) {
             $response = $this->stub->handle($request);
@@ -100,12 +108,9 @@ class PHPRequestHandler implements RequestHandlerInterface
                 return $response;
             }
 
-
             //$this->app->callHook("render:before", $this);
             if ($verb == "GET") {
-
-                $response =  $response->withBody(new StringStream($this->render("")));
-
+                $response = $response->withBody(new StringStream($this->render("")));
                 //    $response = $response->withBody(new StringStream($layout->render($response->getBody()->getContents())));
             }
         }
