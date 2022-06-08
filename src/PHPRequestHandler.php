@@ -8,31 +8,36 @@ use Generator;
 use JsonSerializable;
 use Laminas\Diactoros\Response;
 use Laminas\Diactoros\Response\JsonResponse;
+use League\Event\EventDispatcherAware;
+use League\Event\EventDispatcherAwareBehavior;
 use PHP\Psr7\StringStream;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 use ReflectionClass;
 use ReflectionMethod;
 use ReflectionObject;
-use Twig\Environment;
 use Twig\TwigFunction;
+use \Psr\Http\Server\MiddlewareInterface;
 
-class PHPRequestHandler implements RequestHandlerInterface, LoggerAwareInterface
+class PHPRequestHandler extends RequestHandler
 {
-    private $file;
     private $stub;
     private $twig;
     private $context;
     private $layout;
+
+    /**
+     *  @var MiddlewareInterface []
+     **/
     public $middleware = [];
 
     function __construct(string $file)
     {
-        $this->file = $file;
+        parent::__construct($file);
 
         ob_start();
         $this->stub = require($file);
@@ -58,6 +63,9 @@ class PHPRequestHandler implements RequestHandlerInterface, LoggerAwareInterface
 
     function handle(ServerRequestInterface $request): ResponseInterface
     {
+        foreach ($this->middleware as $middleware) {
+            $request = $middleware->process($request, $this);
+        }
 
         if ($this->stub instanceof RequestHandlerInterface) {
             $response = $this->stub->handle($request);
@@ -137,12 +145,13 @@ class PHPRequestHandler implements RequestHandlerInterface, LoggerAwareInterface
                     if ($type = $param->getType()) {
 
                         if ($type == $context_class->getName()) {
-
                             $args[] = $this->context;
                         } elseif ($type == RequestInterface::class) {
                             $args[] = $this->context->request;
                         } elseif ($type == ResponseInterface::class) {
                             $args[] = $this->context->resp;
+                        } elseif ($type == EventDispatcherInterface::class) {
+                            $args[] = $this->eventDispatcher();
                         } else {
                             $args[] = null;
                         }

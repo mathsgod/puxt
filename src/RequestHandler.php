@@ -4,6 +4,9 @@ namespace PUXT;
 
 use Closure;
 use Exception;
+use League\Event\EventDispatcherAware;
+use League\Event\EventDispatcherAwareBehavior;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -12,50 +15,30 @@ use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 
-class RequestHandler implements RequestHandlerInterface, LoggerAwareInterface
+abstract class RequestHandler implements RequestHandlerInterface, LoggerAwareInterface, EventDispatcherAware
 {
+    use LoggerAwareTrait;
+    use EventDispatcherAwareBehavior;
 
-    /**
-     * @var RequestHandlerInterface
-     */
-    private $handler;
+    private $file;
 
-    //file without extension
-    public function __construct(string $file)
+    function __construct(string $file)
+    {
+        $this->file = $file;
+    }
+
+    public static function Create(string $file): RequestHandler
     {
         if (file_exists($file . ".php")) {
-            $this->handler = new PHPRequestHandler($file . ".php");
+            return new PHPRequestHandler($file . ".php");
         } elseif (file_exists($file . ".twig")) {
-            $this->handler = new TwigRequestHandler($file . ".twig");
+            return new TwigRequestHandler($file . ".twig");
         } elseif (file_exists($file . ".html")) {
-            $this->handler = new HTMLRequestHandler($file . ".html");
+            return new HTMLRequestHandler($file . ".html");
         } elseif (file_exists($file . ".vue")) {
-            $this->handler = new VueRequestHandler($file . ".vue");
+            return new VueRequestHandler($file . ".vue");
         } else {
             throw new Exception("Not found file: " . $file . " .php, .twig , .html or .vue");
-        }
-    }
-
-    public function handle(ServerRequestInterface $request): ResponseInterface
-    {
-        if ($this->handler instanceof PHPRequestHandler) {
-
-            $handler = new QueueRequestHandler($this->handler);
-
-            foreach ($this->handler->middleware as $middleware) {
-                $handler->add($middleware);
-            }
-
-            return $handler->handle($request);
-        }
-
-        return $this->handler->handle($request);
-    }
-
-    public function setLogger(LoggerInterface $logger): void
-    {
-        if ($this->handler instanceof LoggerAwareInterface) {
-            $this->handler->setLogger($logger);
         }
     }
 }

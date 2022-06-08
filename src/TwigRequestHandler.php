@@ -8,15 +8,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
-class TwigRequestHandler implements RequestHandlerInterface
+class TwigRequestHandler extends RequestHandler
 {
-    private $file;
-
-    function __construct(string $file)
-    {
-        $this->file = $file;
-    }
-
     function handle(ServerRequestInterface $request): ResponseInterface
     {
         $response = (new ResponseFactory)->createResponse();

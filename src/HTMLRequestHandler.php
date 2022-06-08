@@ -8,14 +8,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
-class HTMLRequestHandler implements RequestHandlerInterface
+class HTMLRequestHandler extends RequestHandler
 {
-    private $file;
-
-    function __construct(string $file)
-    {
-        $this->file = $file;
-    }
 
     function handle(ServerRequestInterface $request): ResponseInterface
     {
