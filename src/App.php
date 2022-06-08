@@ -295,9 +295,11 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
                     $request = $request->withAttribute("twig", $twig);
 
                     $handler = RequestHandler::Create($file);
-                    $handler->useEventDispatcher($this->eventDispatcher());
+                    if ($handler instanceof EventDispatcherAware) {
+                        $handler->useEventDispatcher($this->eventDispatcher());
+                    }
 
-                    if ($this->logger) {
+                    if ($this->logger && $handler instanceof LoggerAwareInterface) {
                         $handler->setLogger($this->logger);
                     }
 

@@ -12,6 +12,7 @@ use League\Event\EventDispatcherAware;
 use League\Event\EventDispatcherAwareBehavior;
 use PHP\Psr7\StringStream;
 use Psr\EventDispatcher\EventDispatcherInterface;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -29,6 +30,7 @@ class PHPRequestHandler extends RequestHandler
     private $twig;
     private $context;
     private $layout;
+    private $request;
 
     /**
      *  @var MiddlewareInterface []
@@ -63,10 +65,7 @@ class PHPRequestHandler extends RequestHandler
 
     function handle(ServerRequestInterface $request): ResponseInterface
     {
-        foreach ($this->middleware as $middleware) {
-            $request = $middleware->process($request, $this);
-        }
-
+        $this->request = $request;
         if ($this->stub instanceof RequestHandlerInterface) {
             $response = $this->stub->handle($request);
         } else {
@@ -141,16 +140,17 @@ class PHPRequestHandler extends RequestHandler
 
                 $args = [];
                 $context_class = new ReflectionClass($this->context);
+
                 foreach ($ref_method->getParameters() as $param) {
                     if ($type = $param->getType()) {
 
                         if ($type == $context_class->getName()) {
                             $args[] = $this->context;
-                        } elseif ($type == RequestInterface::class) {
-                            $args[] = $this->context->request;
-                        } elseif ($type == ResponseInterface::class) {
+                        } elseif (is_a($type->getName(), RequestInterface::class, true)) {
+                            $args[] = $this->request;
+                        } elseif (is_a($type->getName(), ResponseInterface::class, true)) {
                             $args[] = $this->context->resp;
-                        } elseif ($type == EventDispatcherInterface::class) {
+                        } elseif (is_a($type->getName(), EventDispatcherInterface::class, true)) {
                             $args[] = $this->eventDispatcher();
                         } else {
                             $args[] = null;
@@ -159,7 +159,6 @@ class PHPRequestHandler extends RequestHandler
                         $args[] = null;
                     }
                 }
-
                 return $ref_obj->getMethod($verb)->invoke($this->stub, ...$args);
             }
         } else {
