@@ -8,8 +8,6 @@ use Generator;
 use JsonSerializable;
 use Laminas\Diactoros\Response;
 use Laminas\Diactoros\Response\JsonResponse;
-use League\Event\EventDispatcherAware;
-use League\Event\EventDispatcherAwareBehavior;
 use PHP\Psr7\StringStream;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\RequestInterface;
@@ -152,6 +150,8 @@ class PHPRequestHandler extends RequestHandler
                             $args[] = $this->context->resp;
                         } elseif (is_a($type->getName(), EventDispatcherInterface::class, true)) {
                             $args[] = $this->eventDispatcher();
+                        } elseif (is_a($type->getName(), LoggerInterface::class, true)) {
+                            $args[] = $this->logger;
                         } else {
                             $args[] = null;
                         }
