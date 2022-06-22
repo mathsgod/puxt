@@ -20,7 +20,7 @@ abstract class RequestHandler implements RequestHandlerInterface, LoggerAwareInt
     use LoggerAwareTrait;
     use EventDispatcherAwareBehavior;
 
-    private $file;
+    protected $file;
 
     function __construct(string $file)
     {

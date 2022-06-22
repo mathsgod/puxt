@@ -29,7 +29,6 @@ class PHPRequestHandler extends RequestHandler
     private $stub;
     private $twig;
     private $context;
-    private $layout;
     private $request;
 
     /**
