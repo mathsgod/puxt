@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9d9e1fef281f35d229ef2d8c46f1cd80",
+    "content-hash": "5b3aee9d4e40bddbf5f057b0768911b4",
     "packages": [
         {
             "name": "graham-campbell/result-type",
@@ -563,54 +563,6 @@
                 "source": "https://github.com/mathsgod/html/tree/1.0.14"
             },
             "time": "2020-12-29T03:04:12+00:00"
-        },
-        {
-            "name": "mathsgod/php-psr7",
-            "version": "2.0.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/mathsgod/php-psr7.git",
-                "reference": "d7e34f806b2cdb8033e030299412fa895bf7ecae"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/mathsgod/php-psr7/zipball/d7e34f806b2cdb8033e030299412fa895bf7ecae",
-                "reference": "d7e34f806b2cdb8033e030299412fa895bf7ecae",
-                "shasum": ""
-            },
-            "require": {
-                "laminas/laminas-diactoros": "^2.6",
-                "php": ">=7.0",
-                "psr/http-message": "^1.0"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^9.5"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "PHP\\Psr7\\": "src/"
-                },
-                "files": [
-                    "function/function.php"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Raymond Chong",
-                    "email": "mathsgod@yahoo.com"
-                }
-            ],
-            "description": "A standard implementation of php psr7",
-            "support": {
-                "issues": "https://github.com/mathsgod/php-psr7/issues",
-                "source": "https://github.com/mathsgod/php-psr7/tree/2.0.1"
-            },
-            "time": "2021-08-19T05:27:11+00:00"
         },
         {
             "name": "nikic/fast-route",

@@ -7,6 +7,8 @@ use Composer\Autoload\ClassLoader;
 use Exception;
 use Laminas\Diactoros\Response\TextResponse;
 use Laminas\Diactoros\ResponseFactory;
+use Laminas\Diactoros\ServerRequestFactory;
+use Laminas\Diactoros\StreamFactory;
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
 use League\Event\EventDispatcherAware;
 use League\Event\EventDispatcherAwareBehavior;
@@ -15,8 +17,6 @@ use League\Flysystem\FileAttributes;
 use League\Flysystem\StorageAttributes;
 use League\Route\Http\Exception as HttpException;
 use League\Route\Router;
-use PHP\Psr7\ServerRequestFactory;
-use PHP\Psr7\StringStream;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -73,6 +73,13 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
         $this->root = $root;
         $this->loader = $loader;
         $this->request = ServerRequestFactory::fromGlobals();
+
+        if (strpos($this->request->getHeaderLine("Content-Type"), "application/json") !== false) {
+            $body = $this->request->getBody()->getContents();
+            $this->request = $this->request->withParsedBody(json_decode($body, true));
+        }
+
+
 
         if (file_exists($file = $root . "/puxt.config.php")) {
             $config = require_once($file);
@@ -205,8 +212,7 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
             $data["html_attrs"] = $this->generateTagAttr($head["htmlAttrs"] ?? []);
             $data["head_attrs"] = $this->generateTagAttr($head["headAttrs"] ?? []);
             $data["body_attrs"] = $this->generateTagAttr($head["bodyAttrs"] ?? []);
-
-            $response = $response->withBody(new StringStream($app_template->render($data)));
+            $response = $response->withBody((new StreamFactory)->createStream($app_template->render($data)));
         }
 
 
