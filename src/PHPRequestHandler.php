@@ -8,6 +8,8 @@ use Generator;
 use JsonSerializable;
 use Laminas\Diactoros\Response;
 use Laminas\Diactoros\Response\JsonResponse;
+use Laminas\Diactoros\Stream;
+use Laminas\Diactoros\StreamFactory;
 use PHP\Psr7\StringStream;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\RequestInterface;
@@ -114,8 +116,7 @@ class PHPRequestHandler extends RequestHandler
 
             //$this->app->callHook("render:before", $this);
             if ($verb == "GET") {
-                $response = $response->withBody(new StringStream($this->render("")));
-                //    $response = $response->withBody(new StringStream($layout->render($response->getBody()->getContents())));
+                $response = $response->withBody((new StreamFactory)->createStream($this->render("")));
             }
         }
 
