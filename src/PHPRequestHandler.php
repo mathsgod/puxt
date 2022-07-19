@@ -67,12 +67,16 @@ class PHPRequestHandler extends RequestHandler
         $this->request = $request;
         if ($this->stub instanceof RequestHandlerInterface) {
             $response = $this->stub->handle($request);
+            //head
+            if ($this->stub->head) {
+                $response = $response->withHeader("puxt-head", json_encode($this->stub->head, JSON_UNESCAPED_UNICODE));
+            }
+            return $response;
         } else {
 
             $this->context = $request->getAttribute("context");
             $this->twig = $request->getAttribute("twig");
 
-            $response = new Response();
             $this->processProps();
             $this->processVerb("created");
 
@@ -120,13 +124,6 @@ class PHPRequestHandler extends RequestHandler
                 return new HtmlResponse($this->render(""));
             }
         }
-
-        //head
-        if ($this->stub->head) {
-            $response = $response->withHeader("puxt-head", json_encode($this->stub->head, JSON_UNESCAPED_UNICODE));
-        }
-
-        return $response;
     }
 
     private function processVerb(string $verb)
