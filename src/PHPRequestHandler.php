@@ -9,6 +9,7 @@ use JsonSerializable;
 use Laminas\Diactoros\Response;
 use Laminas\Diactoros\Response\HtmlResponse;
 use Laminas\Diactoros\Response\JsonResponse;
+use Laminas\Diactoros\Response\TextResponse;
 use Laminas\Diactoros\StreamFactory;
 use League\Route\Http\Exception\HttpExceptionInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -93,9 +94,6 @@ class PHPRequestHandler extends RequestHandler
 
             //--- method ---
             $verb = $request->getMethod();
-            if ($verb == "GET") { //load layout
-                //    $layout = $this->getLayout();
-            }
 
             try {
                 ob_start();
@@ -120,11 +118,16 @@ class PHPRequestHandler extends RequestHandler
                 return new JsonResponse($ret);
             }
 
+            if (is_string($ret)) {
+                return new TextResponse($ret);
+            }
+
             if ($verb == "GET") {
                 return new HtmlResponse($this->render(""));
             }
         }
     }
+
 
     private function processVerb(string $verb)
     {
