@@ -216,7 +216,12 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
             return $response->withStatus($code);
         }
 
-        if ($response->getHeaderLine("Content-Type") === "text/html" && $request->getMethod() === "GET") {
+
+        if (
+            $request->getMethod() == "GET"
+            && strpos($request->getHeaderLine("Accept"), "text/html") !== false
+        ) {
+
             if ($head = $response->getHeaderLine("puxt-head")) {
                 $head = json_decode($head, true);
                 $response = $response->withoutHeader("puxt-head");
