@@ -73,13 +73,6 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
 
         $this->root = $root;
         $this->loader = $loader;
-        $this->request = ServerRequestFactory::fromGlobals();
-
-        if (strpos($this->request->getHeaderLine("Content-Type"), "application/json") !== false) {
-            $body = $this->request->getBody()->getContents();
-            $this->request = $this->request->withParsedBody(json_decode($body, true));
-        }
-
 
 
         if (file_exists($file = $root . "/puxt.config.php")) {
@@ -95,17 +88,16 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
         $this->context->config = $this->config;
         $this->context->root = $root;
         $this->context->_get = $_GET;
-        $this->context->_post = $this->request->getParsedBody();
-        $this->context->_files = $this->request->getUploadedFiles();
+        $this->context->_post = $_POST;
+
 
         $this->moduleContainer = new ModuleContainer($this);
 
         //base path
-        $this->base_path = dirname($this->request->getServerParams()["SCRIPT_NAME"]);
+        $this->base_path = dirname($_SERVER["SCRIPT_NAME"]);
         if ($this->base_path == DIRECTORY_SEPARATOR) {
             $this->base_path = "/";
         }
-
 
         if (substr($this->base_path, -1) != "/") {
             $this->base_path .= "/";
@@ -113,22 +105,6 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
 
         $this->document_root = substr($this->root . "/", 0, -strlen($this->base_path));
 
-        $path = $this->request->getUri()->getPath();
-
-        $request_path = substr($path, strlen($this->base_path));
-        if ($request_path === false) {
-            $request_path = "error";
-        }
-
-        $route = new Route();
-        $route->path = $request_path;
-        $route->query = $this->request->getQueryParams();
-        $route->params = new stdClass;
-
-        $this->context->route = $route;
-        $this->context->params = $route->params;
-        $this->context->query = $route->query;
-        $this->context->request = $this->request;
 
         //plugins
         foreach ($this->config["plugins"] as $plugin) {
@@ -143,6 +119,7 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
                 }
             }
         }
+
         //module before
         try {
             $this->moduleContainer->ready();
@@ -154,12 +131,41 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
 
     function handle(ServerRequestInterface $request): ResponseInterface
     {
+
+        $this->request = $request;
+
         if ($request->getMethod() == "OPTIONS") {
             //preflight request
             $response = new EmptyResponse(200);
             $response->withHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, HEAD, DELETE");
             return $response;
         }
+
+        if (strpos($request->getHeaderLine("Content-Type"), "application/json") !== false) {
+            $body = $request->getBody()->getContents();
+            $request = $request->withParsedBody(json_decode($body, true));
+            $this->context->_post = $request->getParsedBody();
+        }
+
+        $this->context->_files = $request->getUploadedFiles();
+
+        $path = $request->getUri()->getPath();
+
+        $request_path = substr($path, strlen($this->base_path));
+        if ($request_path === false) {
+            $request_path = "error";
+        }
+
+        $route = new Route();
+        $route->path = $request_path;
+        $route->query = $this->request->getQueryParams();
+        $route->params = new stdClass;
+
+        $this->context->route = $route;
+        $this->context->params = $route->params;
+        $this->context->query = $route->query;
+        $this->context->request = $request;
+
 
         if (!$this->router) {
             //load default router
@@ -208,16 +214,6 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
             $data["head_attrs"] = $this->generateTagAttr($head["headAttrs"] ?? []);
             $data["body_attrs"] = $this->generateTagAttr($head["bodyAttrs"] ?? []);
             $response = $response->withBody((new StreamFactory)->createStream($app_template->render($data)));
-        }
-
-
-        $response = $response->withHeader("Access-Control-Allow-Credentials", "true")
-            ->withHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, vx-view-as, rest-jwt")
-            ->withHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, HEAD, DELETE")
-            ->withHeader("Access-Control-Expose-Headers", "location, Content-Location");
-
-        if ($origin = $_SERVER["HTTP_ORIGIN"]) {
-            $response = $response->withHeader("Access-Control-Allow-Origin", $origin);
         }
 
         return $response;

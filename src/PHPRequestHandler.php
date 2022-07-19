@@ -110,7 +110,7 @@ class PHPRequestHandler extends RequestHandler
 
             if (is_array($ret) || $ret instanceof JsonSerializable) {
                 $response = $response->withHeader("Content-Type", "application/json");
-                $response->getBody()->write(json_encode($ret, JSON_UNESCAPED_UNICODE));
+                $response = $response->withBody((new StreamFactory)->createStream(json_encode($ret)));
                 return $response;
             }
 

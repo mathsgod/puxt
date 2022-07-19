@@ -23,6 +23,7 @@ class ModuleContainer
         $this->puxt->callHook("modules:before", $this);
 
         //modules
+
         $modules = $this->puxt->config["modules"] ?? [];
         foreach ($modules as $module) {
             $this->addModule($module);
