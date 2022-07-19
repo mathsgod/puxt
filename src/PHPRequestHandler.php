@@ -96,13 +96,14 @@ class PHPRequestHandler extends RequestHandler
             try {
                 ob_start();
                 $ret = $this->processVerb($verb);
-                $content = ob_get_contents();
+                ob_get_contents();
                 ob_end_clean();
             } catch (HttpExceptionInterface $e) {
-
+                ob_get_contents();
+                ob_end_clean();
                 throw $e;
             } catch (Exception $e) {
-                $content = ob_get_contents();
+                ob_get_contents();
                 ob_end_clean();
                 throw new Exception($e->getMessage(), $e->getCode());
             }
@@ -112,16 +113,11 @@ class PHPRequestHandler extends RequestHandler
             }
 
             if (is_array($ret) || $ret instanceof JsonSerializable) {
-                $response = $response->withHeader("Content-Type", "application/json");
-                $response = $response->withBody((new StreamFactory)->createStream(json_encode($ret)));
-                return $response;
+                return new JsonResponse($ret);
             }
 
-            //$this->app->callHook("render:before", $this);
             if ($verb == "GET") {
-                $response = new HtmlResponse($this->render(""));
-                return $response;
-                //$response = $response->withBody((new StreamFactory)->createStream($this->render("")));
+                return new HtmlResponse($this->render(""));
             }
         }
 
