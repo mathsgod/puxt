@@ -7,9 +7,11 @@ use Exception;
 use Generator;
 use JsonSerializable;
 use Laminas\Diactoros\Response;
+use Laminas\Diactoros\Response\HtmlResponse;
 use Laminas\Diactoros\Response\JsonResponse;
 use Laminas\Diactoros\Stream;
 use Laminas\Diactoros\StreamFactory;
+use League\Route\Http\Exception\HttpExceptionInterface;
 use PHP\Psr7\StringStream;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\RequestInterface;
@@ -98,6 +100,9 @@ class PHPRequestHandler extends RequestHandler
                 $ret = $this->processVerb($verb);
                 $content = ob_get_contents();
                 ob_end_clean();
+            } catch (HttpExceptionInterface $e) {
+                
+                throw $e;
             } catch (Exception $e) {
                 $content = ob_get_contents();
                 ob_end_clean();
@@ -116,7 +121,9 @@ class PHPRequestHandler extends RequestHandler
 
             //$this->app->callHook("render:before", $this);
             if ($verb == "GET") {
-                $response = $response->withBody((new StreamFactory)->createStream($this->render("")));
+                $response = new HtmlResponse($this->render(""));
+                return $response;
+                //$response = $response->withBody((new StreamFactory)->createStream($this->render("")));
             }
         }
 

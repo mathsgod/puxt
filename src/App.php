@@ -6,9 +6,9 @@ use Closure;
 use Composer\Autoload\ClassLoader;
 use Exception;
 use Laminas\Diactoros\Response\EmptyResponse;
+use Laminas\Diactoros\Response\JsonResponse;
 use Laminas\Diactoros\Response\TextResponse;
 use Laminas\Diactoros\ResponseFactory;
-use Laminas\Diactoros\ServerRequestFactory;
 use Laminas\Diactoros\StreamFactory;
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
 use League\Event\EventDispatcherAware;
@@ -158,7 +158,7 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
 
         $route = new Route();
         $route->path = $request_path;
-        $route->query = $this->request->getQueryParams();
+        $route->query = $request->getQueryParams();
         $route->params = new stdClass;
 
         $this->context->route = $route;
@@ -175,27 +175,47 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
         try {
             $response = $this->router->dispatch($request);
         } catch (HttpException $e) {
-            $code = $e->getCode();
+
+
+            $code = $e->getStatusCode();
             if ($code < 100 || $code > 599) {
                 $code = 500;
             }
-            $response = (new TextResponse(""))->withStatus($code);
-            return $e->buildJsonResponse($response);
+
+            if ($code == 500 && !$this->config["debug"]) {
+                $message = "Internal Server Error";
+            } else {
+                $message = $e->getMessage();
+            }
+
+            $response = new JsonResponse([
+                "error" => [
+                    "code" => $code,
+                    "message" => $message
+                ]
+            ]);
+            return $response->withStatus($code);
         } catch (Exception $e) {
             $code = $e->getCode();
             if ($code < 100 || $code > 599) {
                 $code = 500;
             }
 
-            $response = (new ResponseFactory)->createResponse(500);
-            $response = $response->withHeader("Content-Type", "application/json");
-            $response->getBody()->write(json_encode([
+            //hide message if debug is off and error is 500
+            if ($code == 500 && !$this->config["debug"]) {
+                $message = "Internal Server Error";
+            } else {
+                $message = $e->getMessage();
+            }
+
+            $response = new JsonResponse([
                 "error" => [
                     "code" => $code,
-                    "message" => $e->getMessage()
-                ],
-            ]));
-            return $response;
+                    "message" => $message
+                ]
+            ]);
+
+            return $response->withStatus($code);
         }
 
         if ($response->getHeaderLine("Content-Type") === "text/html" && $request->getMethod() === "GET") {
@@ -304,9 +324,6 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
                 });
             }
         }
-
-
-
         return $router;
     }
 
