@@ -4,10 +4,8 @@ namespace PUXT;
 
 use Laminas\Diactoros\ResponseFactory;
 use Laminas\Diactoros\StreamFactory;
-use PHP\Psr7\StringStream;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Server\RequestHandlerInterface;
 
 class TwigRequestHandler extends RequestHandler
 {

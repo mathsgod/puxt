@@ -59,7 +59,6 @@ class ModuleContainer
         }
 
         if (is_dir($dir = $this->puxt->root .  DIRECTORY_SEPARATOR . "vendor" . DIRECTORY_SEPARATOR . $module)) {
-
             $entry = $dir . DIRECTORY_SEPARATOR . "index.php";
         }
 
