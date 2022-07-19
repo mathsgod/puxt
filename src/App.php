@@ -5,6 +5,7 @@ namespace PUXT;
 use Closure;
 use Composer\Autoload\ClassLoader;
 use Exception;
+use Laminas\Diactoros\Response\EmptyResponse;
 use Laminas\Diactoros\Response\TextResponse;
 use Laminas\Diactoros\ResponseFactory;
 use Laminas\Diactoros\ServerRequestFactory;
@@ -154,8 +155,9 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
     function handle(ServerRequestInterface $request): ResponseInterface
     {
         if ($request->getMethod() == "OPTIONS") {
-            $response = new TextResponse("");
-            $response = $response->withHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, HEAD, DELETE");
+            //preflight request
+            $response = new EmptyResponse(200);
+            $response->withHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, HEAD, DELETE");
             return $response;
         }
 
