@@ -7,6 +7,8 @@ use Composer\Autoload\ClassLoader;
 use Exception;
 use Laminas\Diactoros\Response\EmptyResponse;
 use Laminas\Diactoros\Response\JsonResponse;
+use Laminas\Diactoros\ServerRequest;
+use Laminas\Diactoros\ServerRequestFactory;
 use Laminas\Diactoros\StreamFactory;
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
 use League\Event\EventDispatcherAware;
@@ -368,12 +370,7 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
 
     public function run()
     {
-        $response = $this->handle($this->request);
-        if ($response->getBody()->isSeekable()) {
-            $response->getBody()->rewind();
-        }
-        $emiter = new SapiEmitter();
-        $emiter->emit($response);
+        (new SapiEmitter)->emit($this->handle(ServerRequestFactory::fromGlobals()));
     }
 
     private function generateTagAttr(array $attrs)
