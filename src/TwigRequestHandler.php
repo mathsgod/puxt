@@ -2,6 +2,7 @@
 
 namespace PUXT;
 
+use Laminas\Diactoros\Response\HtmlResponse;
 use Laminas\Diactoros\ResponseFactory;
 use Laminas\Diactoros\StreamFactory;
 use Psr\Http\Message\ServerRequestInterface;
@@ -11,13 +12,10 @@ class TwigRequestHandler extends RequestHandler
 {
     function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $response = (new ResponseFactory)->createResponse();
+
         $twig = $request->getAttribute('twig');
         $context = $request->getAttribute('context');
         $file = basename($this->file);
-
-        //$response = $response->withBody(new StringStream($twig->render($file, (array)$context)));
-        $response = $response->withBody((new StreamFactory)->createStream($twig->render($file, (array)$context)));
-        return $response;
+        return new HtmlResponse($twig->render($file, (array)$context));
     }
 }
