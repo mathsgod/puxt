@@ -368,6 +368,9 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
         $this->twig_extensions[] = $extension;
     }
 
+    /**
+     * (new App)->run()
+     */
     public function run()
     {
         (new SapiEmitter)->emit($this->handle(ServerRequestFactory::fromGlobals()));
