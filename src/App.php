@@ -153,16 +153,9 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
 
     function handle(ServerRequestInterface $request): ResponseInterface
     {
-
         if ($request->getMethod() == "OPTIONS") {
-            $origin = $_SERVER["HTTP_ORIGIN"];
-
             $response = new TextResponse("");
-            $response = $response->withHeader("Access-Control-Allow-Credentials", "true")
-                ->withHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, vx-view-as, rest-jwt")
-                ->withHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, HEAD, DELETE")
-                ->withHeader("Access-Control-Expose-Headers", "location, Content-Location")
-                ->withHeader("Access-Control-Allow-Origin", $origin);
+            $response = $response->withHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, HEAD, DELETE");
             return $response;
         }
 
