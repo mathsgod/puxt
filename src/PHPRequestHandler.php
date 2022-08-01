@@ -6,6 +6,7 @@ use Closure;
 use Exception;
 use Generator;
 use JsonSerializable;
+use Laminas\Diactoros\Response\EmptyResponse;
 use Laminas\Diactoros\Response\HtmlResponse;
 use Laminas\Diactoros\Response\JsonResponse;
 use Laminas\Diactoros\Response\TextResponse;
@@ -123,6 +124,8 @@ class PHPRequestHandler extends RequestHandler
             if ($verb == "GET") {
                 return new HtmlResponse($this->render(""));
             }
+
+            return new EmptyResponse(200);
         }
     }
 
