@@ -29,6 +29,7 @@
     },
     "require-dev": {
         "hostlink/puxt-vue-loader": "^1.0",
-        "monolog/monolog": "^2.7"
+        "monolog/monolog": "^2.7",
+        "laminas/laminas-diactoros": "^2.11"
     }
 }
