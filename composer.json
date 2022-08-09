@@ -1,10 +1,4 @@
 {
-    "repositories": [
-        {
-            "type": "composer",
-            "url": "https://raymond2.hostlink.com.hk/satis/web"
-        }
-    ],
     "description": "PHP framework",
     "name": "mathsgod/puxt",
     "type": "framework",
