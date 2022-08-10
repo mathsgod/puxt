@@ -211,6 +211,7 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
         if (
             $request->getMethod() == "GET"
             && strpos($request->getHeaderLine("Accept"), "text/html") !== false
+            && $response->getHeaderLine("Content-Type") == "text/html"
         ) {
 
             if ($head = $response->getHeaderLine("puxt-head")) {
