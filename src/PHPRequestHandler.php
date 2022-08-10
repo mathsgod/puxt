@@ -64,6 +64,25 @@ class PHPRequestHandler extends RequestHandler
 
     function handle(ServerRequestInterface $request): ResponseInterface
     {
+        $response = $this->handlePage($request);
+
+        if ($request->getMethod() == "GET" && $this->layout) {
+            try {
+                $h = RequestHandler::Create("layouts/" . $this->layout);
+
+                $request = $request->withAttribute("context", [
+                    "puxt" => $response->getBody()->getContents()
+                ]);
+                $response = $h->handle($request);
+            } catch (Exception $e) {
+            }
+        }
+
+        return $response;
+    }
+
+    private function handlePage(ServerRequestInterface $request): ResponseInterface
+    {
         $this->request = $request;
         if ($this->stub instanceof RequestHandlerInterface) {
             $response = $this->stub->handle($request);
@@ -288,8 +307,14 @@ class PHPRequestHandler extends RequestHandler
 
         try {
             $twig_file = substr($this->file, 0, -strlen("php")) . "twig";
+
+
             if (file_exists($twig_file)) {
-                $twig = $twig_env->load(basename($twig_file));
+
+                //remove root
+                $twig_file = substr($twig_file, strlen($this->context->root));
+
+                $twig = $twig_env->load($twig_file);
             } else {
                 $twig_env->setLoader(new \Twig\Loader\ArrayLoader([
                     'page' => $this->twig_content,

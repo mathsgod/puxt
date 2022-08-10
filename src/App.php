@@ -300,7 +300,7 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
                     }
                     $request = $request->withAttribute("context", $this->context);
 
-                    $twig = $this->getTwig(new \Twig\Loader\FilesystemLoader(dirname($file)));
+                    $twig = $this->getTwig(new \Twig\Loader\FilesystemLoader([$this->root]));
                     $request = $request->withAttribute("twig", $twig);
 
                     $handler = RequestHandler::Create($file);
