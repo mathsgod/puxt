@@ -42,11 +42,6 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
      */
     public $request;
 
-    /**
-     * @var ResponseInterface
-     */
-    public $response;
-
     public $base_path;
     public $document_root;
     public $config;
