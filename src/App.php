@@ -5,9 +5,9 @@ namespace PUXT;
 use Closure;
 use Composer\Autoload\ClassLoader;
 use Exception;
+use Laminas\Config\Config;
 use Laminas\Diactoros\Response\EmptyResponse;
 use Laminas\Diactoros\Response\JsonResponse;
-use Laminas\Diactoros\ServerRequest;
 use Laminas\Diactoros\ServerRequestFactory;
 use Laminas\Diactoros\StreamFactory;
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
@@ -49,12 +49,7 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
 
     public $base_path;
     public $document_root;
-    public $config = [
-        "dir" => [
-            "layouts" => "layouts",
-            "pages" => "pages"
-        ]
-    ];
+    public $config;
     public $context;
     public $moduleContainer;
 
@@ -74,12 +69,16 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
         $this->root = $root;
         $this->loader = $loader;
 
+        $this->config = new Config([
+            "dir" => [
+                "layouts" => "layouts",
+                "pages" => "pages"
+            ]
+        ]);
+
 
         if (file_exists($file = $root . "/puxt.config.php")) {
-            $config = require_once($file);
-            foreach ($config as $k => $v) {
-                $this->config[$k] = $v;
-            }
+            $this->config->merge(new Config(include $file));
         }
 
         \Dotenv\Dotenv::createImmutable($root)->safeLoad();
@@ -89,7 +88,6 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
         $this->context->root = $root;
         $this->context->_get = $_GET;
         $this->context->_post = $_POST;
-
 
         $this->moduleContainer = new ModuleContainer($this);
 
@@ -105,9 +103,8 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
 
         $this->document_root = substr($this->root . "/", 0, -strlen($this->base_path));
 
-
         //plugins
-        foreach ($this->config["plugins"] as $plugin) {
+        foreach ($this->config->get("plugins", []) as $plugin) {
             if (file_exists($plugin)) {
                 $p = require($plugin);
                 if ($p instanceof Closure) {
@@ -182,19 +179,18 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
                 $code = 500;
             }
 
-            if ($code == 500 && !$this->config["debug"]) {
+            if ($code == 500 && !$this->config->debug) {
                 $message = "Internal Server Error";
             } else {
                 $message = $e->getMessage();
             }
 
-            $response = new JsonResponse([
+            return new JsonResponse([
                 "error" => [
                     "code" => $code,
                     "message" => $message
                 ]
-            ]);
-            return $response->withStatus($code);
+            ], $code);
         } catch (Exception $e) {
             $code = $e->getCode();
             if ($code < 100 || $code > 599) {
@@ -202,20 +198,18 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
             }
 
             //hide message if debug is off and error is 500
-            if ($code == 500 && !$this->config["debug"]) {
+            if ($code == 500 && !$this->config->debug) {
                 $message = "Internal Server Error";
             } else {
                 $message = $e->getMessage();
             }
 
-            $response = new JsonResponse([
+            return new JsonResponse([
                 "error" => [
                     "code" => $code,
                     "message" => $message
                 ]
-            ]);
-
-            return $response->withStatus($code);
+            ], $code);
         }
 
 
@@ -228,7 +222,7 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
                 $head = json_decode($head, true);
                 $response = $response->withoutHeader("puxt-head");
             } else {
-                $head = $this->config["head"] ?? [];
+                $head = $this->config->head ?? [];
             }
 
             $app_template = $this->getAppTemplate();
@@ -249,9 +243,7 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
     {
         $router = new Router();
 
-
         $router->addPatternMatcher("any", ".+");
-
 
         $base_path = $this->root . DIRECTORY_SEPARATOR . $this->config["dir"]["pages"];
 
@@ -351,16 +343,16 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
         if ($code < 100 || $code > 599) {
             $code = 500;
         }
-        $this->response = $this->response->withStatus($code, $e->getMessage());
-        $this->response = $this->response->withHeader("Content-Type", "application/json");
-        $this->response->getBody()->write(json_encode([
+
+        $response = new JsonResponse([
             "error" => [
                 "code" => $code,
                 "message" => $e->getMessage()
             ],
-        ]));
+        ]);
+        $response = $response->withStatus($code, $e->getMessage());
 
-        return $this->emit($this->response);
+        (new SapiEmitter())->emit($response);
     }
 
     public function addExtension(ExtensionInterface $extension)
@@ -466,11 +458,5 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
         }
 
         return $twig;
-    }
-
-    private function emit(ResponseInterface $response)
-    {
-        $emiter = new SapiEmitter();
-        $emiter->emit($response);
     }
 }

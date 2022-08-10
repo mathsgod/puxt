@@ -25,11 +25,12 @@
         "league/flysystem": "^2.3",
         "vlucas/phpdotenv": "^5.4",
         "league/event": "^3.0",
-        "psr/log": "^1.0 || ^2.0 || ^3.0"
+        "psr/log": "^1.0 || ^2.0 || ^3.0",
+        "laminas/laminas-diactoros": "^2.11",
+        "laminas/laminas-config": "^3.7"
     },
     "require-dev": {
         "hostlink/puxt-vue-loader": "^1.0",
-        "monolog/monolog": "^2.7",
-        "laminas/laminas-diactoros": "^2.11"
+        "monolog/monolog": "^2.7"
     }
 }

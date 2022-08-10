@@ -9,6 +9,7 @@ use Psr\Http\Message\ResponseInterface;
 
 class Context
 {
+    public $config;
     public $params;
     public $query;
     public $_redirected = false;
