@@ -23,13 +23,12 @@ use ReflectionMethod;
 use ReflectionObject;
 use Twig\TwigFunction;
 use \Psr\Http\Server\MiddlewareInterface;
+use Twig\Environment;
 
 class PHPRequestHandler extends RequestHandler
 {
     private $stub;
-    private $twig;
     private $context;
-    private $request;
 
     /**
      *  @var MiddlewareInterface []
@@ -60,6 +59,7 @@ class PHPRequestHandler extends RequestHandler
         if ($this->stub instanceof LoggerAwareInterface) {
             $this->stub->setLogger($logger);
         }
+        $this->logger = $logger;
     }
 
     function handle(ServerRequestInterface $request): ResponseInterface
@@ -73,6 +73,7 @@ class PHPRequestHandler extends RequestHandler
                 $request = $request->withAttribute("context", [
                     "puxt" => $response->getBody()->getContents()
                 ]);
+                
                 $response = $h->handle($request);
             } catch (Exception $e) {
             }
@@ -97,13 +98,13 @@ class PHPRequestHandler extends RequestHandler
             $this->twig = $request->getAttribute("twig");
 
             $this->processProps();
-            $this->processVerb("created");
+            $this->processVerb("created", $request);
 
 
             //--- entry ---
             $params = $request->getQueryParams();
             if ($entry = $params["_entry"]) {
-                $ret = $this->processEntry($entry);
+                $ret = $this->processEntry($entry, $request);
                 if ($ret instanceof ResponseInterface) {
                     return $ret;
                 }
@@ -115,7 +116,7 @@ class PHPRequestHandler extends RequestHandler
 
             try {
                 ob_start();
-                $ret = $this->processVerb($verb);
+                $ret = $this->processVerb($verb, $request);
                 ob_get_contents();
                 ob_end_clean();
             } catch (HttpExceptionInterface $e) {
@@ -141,7 +142,7 @@ class PHPRequestHandler extends RequestHandler
             }
 
             if ($verb == "GET") {
-                return new HtmlResponse($this->render(""));
+                return new HtmlResponse($this->render("", $request->getAttribute("twig")));
             }
 
             return new EmptyResponse(200);
@@ -149,7 +150,7 @@ class PHPRequestHandler extends RequestHandler
     }
 
 
-    private function processVerb(string $verb)
+    private function processVerb(string $verb, RequestInterface $request)
     {
         if (is_object($this->stub)) {
             $ref_obj = new ReflectionObject($this->stub);
@@ -166,7 +167,7 @@ class PHPRequestHandler extends RequestHandler
                         if ($type == $context_class->getName()) {
                             $args[] = $this->context;
                         } elseif (is_a($type->getName(), RequestInterface::class, true)) {
-                            $args[] = $this->request;
+                            $args[] = $request;
                         } elseif (is_a($type->getName(), ResponseInterface::class, true)) {
                             $args[] = $this->context->resp;
                         } elseif (is_a($type->getName(), EventDispatcherInterface::class, true)) {
@@ -195,10 +196,10 @@ class PHPRequestHandler extends RequestHandler
         }
     }
 
-    public function processEntry(string $entry)
+    public function processEntry(string $entry, RequestInterface $request)
     {
         if (is_object($this->stub)) {
-            return $this->processVerb($entry);
+            return $this->processVerb($entry, $request);
         } else {
             $act = $this->stub["entries"][$entry];
             if ($act instanceof Closure) {
@@ -258,15 +259,12 @@ class PHPRequestHandler extends RequestHandler
         }
     }
 
-    private function getTwigEnvironment(): \Twig\Environment
-    {
-        return $this->twig;
-    }
-
-    public function render($puxt)
+    public function render($puxt, ?Environment $twig_env)
     {
 
-        $twig_env = $this->getTwigEnvironment();
+        if (!$twig_env) {
+            return "twig enviroment is null";
+        }
 
         if (is_object($this->stub)) {
             $stub = $this->stub;
