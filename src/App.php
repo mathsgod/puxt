@@ -69,7 +69,7 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
                 "layouts" => "layouts",
                 "pages" => "pages"
             ]
-        ]);
+        ], true);
 
 
         if (file_exists($file = $root . "/puxt.config.php")) {
