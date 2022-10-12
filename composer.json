@@ -16,7 +16,7 @@
     },
     "require": {
         "php": "^7.3 || ~8.0.0",
-        "twig/twig": "^3.3",
+        "twig/twig": "^3.4",
         "mathsgod/html": "^1.0",
         "psr/http-server-middleware": "^1.0",
         "laminas/laminas-httphandlerrunner": "^2.1",
