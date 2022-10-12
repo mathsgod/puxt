@@ -126,12 +126,6 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
 
         $this->request = $request;
 
-        if ($request->getMethod() == "OPTIONS") {
-            //preflight request
-            $response = new EmptyResponse(200);
-            $response->withHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, HEAD, DELETE");
-            return $response;
-        }
 
         if (strpos($request->getHeaderLine("Content-Type"), "application/json") !== false) {
             $body = $request->getBody()->getContents();
@@ -140,6 +134,7 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
         }
 
         $this->context->_files = $request->getUploadedFiles();
+
 
         $path = $request->getUri()->getPath();
 
