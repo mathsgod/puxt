@@ -12,11 +12,23 @@ class TwigRequestHandler extends RequestHandler
     function handle(ServerRequestInterface $request): ResponseInterface
     {
 
+      
         /** @var Environment $twig */
         $twig = $request->getAttribute('twig');
         $context = $request->getAttribute('context');
 
+        if ($twig->getLoader()->exists($this->file)) {
+            $html = $twig->render($this->file, $context);
+            return new HtmlResponse($html);
+        } else {
 
-        return new HtmlResponse($twig->render($this->file, (array)$context));
+            //create load
+            $twig->setLoader(new \Twig\Loader\ArrayLoader([
+                "page" => file_get_contents($this->file)
+            ]));
+            $html = $twig->render("page", (array)$context);
+            return new HtmlResponse($html);
+        }
+
     }
 }
