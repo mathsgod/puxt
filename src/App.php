@@ -7,6 +7,7 @@ use Composer\Autoload\ClassLoader;
 use Exception;
 use Laminas\Config\Config;
 use Laminas\Diactoros\Response\EmptyResponse;
+use Laminas\Diactoros\Response\HtmlResponse;
 use Laminas\Diactoros\Response\JsonResponse;
 use Laminas\Diactoros\ServerRequestFactory;
 use Laminas\Diactoros\StreamFactory;
@@ -180,12 +181,16 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
                 $message = $e->getMessage();
             }
 
-            return new JsonResponse([
-                "error" => [
-                    "code" => $code,
-                    "message" => $message
-                ]
-            ], $code);
+            if ($this->config->debug_format == "html") {
+                return new HtmlResponse($code, $message);
+            } else {
+                return new JsonResponse([
+                    "error" => [
+                        "code" => $code,
+                        "message" => $message
+                    ]
+                ], $code);
+            }
         } catch (Exception $e) {
             $code = $e->getCode();
             if ($code < 100 || $code > 599) {
@@ -199,12 +204,16 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
                 $message = $e->getMessage();
             }
 
-            return new JsonResponse([
-                "error" => [
-                    "code" => $code,
-                    "message" => $message
-                ]
-            ], $code);
+            if ($this->config->debug_format == "html") {
+                return new HtmlResponse($code, $message);
+            } else {
+                return new JsonResponse([
+                    "error" => [
+                        "code" => $code,
+                        "message" => $message
+                    ]
+                ], $code);
+            }
         }
 
 
