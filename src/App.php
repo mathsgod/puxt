@@ -177,7 +177,7 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
             }
 
             if ($this->config->debug_format == "html") {
-                return new HtmlResponse($code, $message);
+                return new HtmlResponse($message, $code);
             } else {
                 return new JsonResponse([
                     "error" => [
@@ -200,7 +200,7 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
             }
 
             if ($this->config->debug_format == "html") {
-                return new HtmlResponse($code, $message);
+                return new HtmlResponse($message, $code);
             } else {
                 return new JsonResponse([
                     "error" => [
