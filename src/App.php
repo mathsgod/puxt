@@ -128,6 +128,7 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
 
     function handle(ServerRequestInterface $request): ResponseInterface
     {
+        $request = $request->withAttribute("service manager", $this->services_manager);
 
         $this->services_manager->setService(ServerRequestInterface::class, $request);
 

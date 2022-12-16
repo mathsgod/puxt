@@ -11,6 +11,7 @@ use Laminas\Diactoros\Response\HtmlResponse;
 use Laminas\Diactoros\Response\JsonResponse;
 use Laminas\Diactoros\Response\TextResponse;
 use League\Route\Http\Exception\HttpExceptionInterface;
+use Psr\Container\ContainerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -23,6 +24,7 @@ use ReflectionMethod;
 use ReflectionObject;
 use Twig\TwigFunction;
 use \Psr\Http\Server\MiddlewareInterface;
+use ReflectionFunction;
 use Twig\Environment;
 
 class PHPRequestHandler extends RequestHandler
@@ -38,11 +40,44 @@ class PHPRequestHandler extends RequestHandler
     function __construct(string $file)
     {
         parent::__construct($file);
-
+        /* 
         ob_start();
         $this->stub = require($file);
         $this->twig_content = ob_get_contents();
         ob_end_clean();
+
+        if (is_callable($this->stub)) {
+
+            if (is_object($this->stub)) {
+                $ref = new ReflectionObject($this->stub);
+                $params = $ref->getMethod("__invoke")->getParameters();
+
+                //injection
+                $args = [];
+                foreach ($params as $param) {
+                    //reflection
+                    if ($container->has($param->getType()->getName())) {
+                        $args[] = $container->get($param->getType()->getName());
+                    } else {
+                        $args[] = null;
+                    }
+                }
+
+                print_r($args);
+                die();
+            } else {
+
+                //reflection
+                $ref = new ReflectionFunction($this->stub);
+                print_r($ref->getParameters());
+            }
+
+
+
+            die();
+        }
+
+
 
         $this->layout = $this->stub->layout ?? "default";
 
@@ -51,7 +86,7 @@ class PHPRequestHandler extends RequestHandler
             if (file_exists($file)) {
                 $this->middleware[] = require($file);
             }
-        }
+        } */
     }
 
     public function setLogger(LoggerInterface $logger): void
@@ -64,7 +99,28 @@ class PHPRequestHandler extends RequestHandler
 
     function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $response = $this->handlePage($request);
+
+        ob_start();
+        $this->stub = require($this->file);
+        $this->twig_content = ob_get_contents();
+        ob_end_clean();
+
+        $this->layout = $this->stub->layout ?? "default";
+
+        foreach ($this->stub->middleware ?? [] as $middleware) {
+            $file = getcwd() . DIRECTORY_SEPARATOR . "middleware" . DIRECTORY_SEPARATOR . $middleware . ".php";
+            if (file_exists($file)) {
+                $middleware = require($file);
+                /*      if ($middleware instanceof MiddlewareInterface) {
+                    $response = $middleware->process($request, $this);
+                    if ($response instanceof ResponseInterface) {
+                        return $response;
+                    }
+                } */
+            }
+        }
+
+        $response = $this->handleRequest($request);
 
         if ($request->getMethod() == "GET" && $this->layout) {
             try {
@@ -73,7 +129,7 @@ class PHPRequestHandler extends RequestHandler
                 $request = $request->withAttribute("context", [
                     "puxt" => $response->getBody()->getContents()
                 ]);
-                
+
                 $response = $h->handle($request);
             } catch (Exception $e) {
             }
@@ -82,7 +138,7 @@ class PHPRequestHandler extends RequestHandler
         return $response;
     }
 
-    private function handlePage(ServerRequestInterface $request): ResponseInterface
+    private function handleRequest(ServerRequestInterface $request): ResponseInterface
     {
         $this->request = $request;
         if ($this->stub instanceof RequestHandlerInterface) {
@@ -150,8 +206,13 @@ class PHPRequestHandler extends RequestHandler
     }
 
 
-    private function processVerb(string $verb, RequestInterface $request)
+    private function processVerb(string $verb, ServerRequestInterface $request)
     {
+        /**
+         * @var ContainerInterface
+         */
+        $container = $request->getAttribute("service manager");
+
         if (is_object($this->stub)) {
             $ref_obj = new ReflectionObject($this->stub);
             if ($ref_obj->hasMethod($verb)) {
@@ -159,21 +220,12 @@ class PHPRequestHandler extends RequestHandler
                 $ref_method = $ref_obj->getMethod($verb);
 
                 $args = [];
-                $context_class = new ReflectionClass($this->context);
 
                 foreach ($ref_method->getParameters() as $param) {
                     if ($type = $param->getType()) {
 
-                        if ($type == $context_class->getName()) {
-                            $args[] = $this->context;
-                        } elseif (is_a($type->getName(), RequestInterface::class, true)) {
-                            $args[] = $request;
-                        } elseif (is_a($type->getName(), ResponseInterface::class, true)) {
-                            $args[] = $this->context->resp;
-                        } elseif (is_a($type->getName(), EventDispatcherInterface::class, true)) {
-                            $args[] = $this->eventDispatcher();
-                        } elseif (is_a($type->getName(), LoggerInterface::class, true)) {
-                            $args[] = $this->logger;
+                        if ($container->has($type->getName())) {
+                            $args[] = $container->get($type->getName());
                         } else {
                             $args[] = null;
                         }

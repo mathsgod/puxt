@@ -15,6 +15,7 @@ abstract class RequestHandler implements RequestHandlerInterface, LoggerAwareInt
     use EventDispatcherAwareBehavior;
 
     protected $file;
+    protected $container;
 
     function __construct(string $file)
     {
