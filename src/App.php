@@ -25,9 +25,11 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
-use stdClass;
 use Twig\Extension\ExtensionInterface;
 use Twig\Loader\LoaderInterface;
+use Laminas\Di;
+use Laminas\Di\Container;
+use stdClass;
 
 class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareInterface
 {
@@ -55,19 +57,24 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
     protected $twig_extensions = [];
     public $loader;
     public $router;
-    protected $services_manager;
+    protected $serviceManager;
 
     public function __construct(?string $root = null, ?ClassLoader $loader = null)
     {
         //create services manager
-        $this->services_manager = new ServiceManager([
+        $this->serviceManager = new ServiceManager([
             "services" => [
                 App::class => $this,
                 EventDispatcherInterface::class => $this->eventDispatcher(),
             ]
         ]);
-        $this->services_manager->setService(ServiceManager::class, $this->services_manager);
-        $this->services_manager->setAllowOverride(true);
+        $this->serviceManager->setService(ServiceManager::class, $this->serviceManager);
+
+        $this->serviceManager->setFactory(Di\ConfigInterface::class, Container\ConfigFactory::class);
+        $this->serviceManager->setFactory(Di\InjectorInterface::class, Container\InjectorFactory::class);
+
+        $this->serviceManager->setAllowOverride(true);
+
 
         if (!$root) {
             $debug = debug_backtrace()[0];
@@ -136,13 +143,13 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
 
     function getServiceManager(): ServiceManager
     {
-        return $this->services_manager;
+        return $this->serviceManager;
     }
 
     function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $request = $request->withAttribute("service manager", $this->services_manager);
-        $this->services_manager->setService(ServerRequestInterface::class, $request);
+        $request = $request->withAttribute("service manager", $this->serviceManager);
+        $this->serviceManager->setService(ServerRequestInterface::class, $request);
         $this->request = $request;
 
         if (strpos($request->getHeaderLine("Content-Type"), "application/json") !== false) {
