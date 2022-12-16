@@ -12,19 +12,13 @@ use Laminas\Diactoros\Response\JsonResponse;
 use Laminas\Diactoros\Response\TextResponse;
 use League\Route\Http\Exception\HttpExceptionInterface;
 use Psr\Container\ContainerInterface;
-use Psr\EventDispatcher\EventDispatcherInterface;
-use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use Psr\Log\LoggerAwareInterface;
-use Psr\Log\LoggerInterface;
-use ReflectionClass;
 use ReflectionMethod;
 use ReflectionObject;
 use Twig\TwigFunction;
 use \Psr\Http\Server\MiddlewareInterface;
-use ReflectionFunction;
 use Twig\Environment;
 
 class PHPRequestHandler extends RequestHandler
@@ -36,66 +30,6 @@ class PHPRequestHandler extends RequestHandler
      *  @var MiddlewareInterface []
      **/
     public $middleware = [];
-
-    function __construct(string $file)
-    {
-        parent::__construct($file);
-        /* 
-        ob_start();
-        $this->stub = require($file);
-        $this->twig_content = ob_get_contents();
-        ob_end_clean();
-
-        if (is_callable($this->stub)) {
-
-            if (is_object($this->stub)) {
-                $ref = new ReflectionObject($this->stub);
-                $params = $ref->getMethod("__invoke")->getParameters();
-
-                //injection
-                $args = [];
-                foreach ($params as $param) {
-                    //reflection
-                    if ($container->has($param->getType()->getName())) {
-                        $args[] = $container->get($param->getType()->getName());
-                    } else {
-                        $args[] = null;
-                    }
-                }
-
-                print_r($args);
-                die();
-            } else {
-
-                //reflection
-                $ref = new ReflectionFunction($this->stub);
-                print_r($ref->getParameters());
-            }
-
-
-
-            die();
-        }
-
-
-
-        $this->layout = $this->stub->layout ?? "default";
-
-        foreach ($this->stub->middleware ?? [] as $middleware) {
-            $file = getcwd() . DIRECTORY_SEPARATOR . "middleware" . DIRECTORY_SEPARATOR . $middleware . ".php";
-            if (file_exists($file)) {
-                $this->middleware[] = require($file);
-            }
-        } */
-    }
-
-    public function setLogger(LoggerInterface $logger): void
-    {
-        if ($this->stub instanceof LoggerAwareInterface) {
-            $this->stub->setLogger($logger);
-        }
-        $this->logger = $logger;
-    }
 
     function handle(ServerRequestInterface $request): ResponseInterface
     {
@@ -151,7 +85,6 @@ class PHPRequestHandler extends RequestHandler
         } else {
 
             $this->context = $request->getAttribute("context");
-            $this->twig = $request->getAttribute("twig");
 
             $this->processProps();
             $this->processVerb("created", $request);
@@ -159,7 +92,8 @@ class PHPRequestHandler extends RequestHandler
 
             //--- entry ---
             $params = $request->getQueryParams();
-            if ($entry = $params["_entry"]) {
+
+            if (in_array("_entry", $params) || $entry = $params["_entry"]) {
                 $ret = $this->processEntry($entry, $request);
                 if ($ret instanceof ResponseInterface) {
                     return $ret;
@@ -248,7 +182,7 @@ class PHPRequestHandler extends RequestHandler
         }
     }
 
-    public function processEntry(string $entry, RequestInterface $request)
+    public function processEntry(string $entry, ServerRequestInterface $request)
     {
         if (is_object($this->stub)) {
             return $this->processVerb($entry, $request);

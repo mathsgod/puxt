@@ -19,6 +19,7 @@ use League\Flysystem\FileAttributes;
 use League\Flysystem\StorageAttributes;
 use League\Route\Http\Exception as HttpException;
 use League\Route\Router;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -59,7 +60,14 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
     public function __construct(?string $root = null, ?ClassLoader $loader = null)
     {
         //create services manager
-        $this->services_manager = new ServiceManager();
+        $this->services_manager = new ServiceManager([
+            "services" => [
+                App::class => $this,
+                EventDispatcherInterface::class => $this->eventDispatcher(),
+            ]
+        ]);
+        $this->services_manager->setService(ServiceManager::class, $this->services_manager);
+        $this->services_manager->setAllowOverride(true);
 
         if (!$root) {
             $debug = debug_backtrace()[0];
@@ -126,14 +134,16 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
         }
     }
 
+    function getServiceManager(): ServiceManager
+    {
+        return $this->services_manager;
+    }
+
     function handle(ServerRequestInterface $request): ResponseInterface
     {
         $request = $request->withAttribute("service manager", $this->services_manager);
-
         $this->services_manager->setService(ServerRequestInterface::class, $request);
-
         $this->request = $request;
-
 
         if (strpos($request->getHeaderLine("Content-Type"), "application/json") !== false) {
             $body = $request->getBody()->getContents();
@@ -142,7 +152,6 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
         }
 
         $this->context->_files = $request->getUploadedFiles();
-
 
         $path = $request->getUri()->getPath();
 
@@ -160,7 +169,6 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
         $this->context->params = $route->params;
         $this->context->query = $route->query;
         $this->context->request = $request;
-
 
         if (!$this->router) {
             //load default router
@@ -217,7 +225,6 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
                 ], $code);
             }
         }
-
 
         if (
             $request->getMethod() == "GET"
@@ -315,16 +322,7 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
                     $twig = $this->getTwig(new \Twig\Loader\FilesystemLoader([$this->root]));
                     $request = $request->withAttribute("twig", $twig);
 
-                    $handler = RequestHandler::Create($file);
-                    if ($handler instanceof EventDispatcherAware) {
-                        $handler->useEventDispatcher($this->eventDispatcher());
-                    }
-
-                    if ($this->logger && $handler instanceof LoggerAwareInterface) {
-                        $handler->setLogger($this->logger);
-                    }
-
-                    return $handler->handle($request);
+                    RequestHandler::Create($file)->handle($request);
                 });
             }
         }

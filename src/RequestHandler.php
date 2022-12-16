@@ -3,16 +3,10 @@
 namespace PUXT;
 
 use Exception;
-use League\Event\EventDispatcherAware;
-use League\Event\EventDispatcherAwareBehavior;
 use Psr\Http\Server\RequestHandlerInterface;
-use Psr\Log\LoggerAwareInterface;
-use Psr\Log\LoggerAwareTrait;
 
-abstract class RequestHandler implements RequestHandlerInterface, LoggerAwareInterface, EventDispatcherAware
+abstract class RequestHandler implements RequestHandlerInterface
 {
-    use LoggerAwareTrait;
-    use EventDispatcherAwareBehavior;
 
     protected $file;
     protected $container;
