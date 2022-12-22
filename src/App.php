@@ -358,8 +358,12 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
 
         $response = new JsonResponse([
             "error" => [
-                "code" => $code,
-                "message" => $e->getMessage()
+                "code" => $e->getCode(),
+                "message" => $e->getMessage(),
+                "line" => $e->getLine(),
+                "file" => $e->getFile(),
+                "trace" => $e->getTraceAsString()
+
             ],
         ]);
         $response = $response->withStatus($code, $e->getMessage());
