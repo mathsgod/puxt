@@ -29,9 +29,15 @@ use Twig\Extension\ExtensionInterface;
 use Twig\Loader\LoaderInterface;
 use Laminas\Di;
 use Laminas\Di\Container;
+use Laminas\HttpHandlerRunner\RequestHandlerRunner;
+use Laminas\HttpHandlerRunner\RequestHandlerRunnerInterface;
+use Laminas\Stratigility\MiddlewarePipe;
+use Laminas\Stratigility\MiddlewarePipeInterface;
+use Psr\Http\Server\MiddlewareInterface;
 use stdClass;
+use Throwable;
 
-class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareInterface
+class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerRunnerInterface, MiddlewareInterface
 {
     use EventDispatcherAwareBehavior;
     use LoggerAwareTrait;
@@ -50,17 +56,49 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
     public $document_root;
     public $config;
     public $context;
-    public $moduleContainer;
 
-    private $_hooks = [];
     public $twig;
     protected $twig_extensions = [];
     public $loader;
     public $router;
+
+
+    protected $server;
+    protected $middleware;
     protected $serviceManager;
 
-    public function __construct(?string $root = null, ?ClassLoader $loader = null)
+    public function __construct()
     {
+        //service manager
+        $this->serviceManager = new ServiceManager([
+            "services" => [
+                App::class => $this,
+                EventDispatcherInterface::class => $this->eventDispatcher(),
+            ],
+            "factories" => [
+                Di\ConfigInterface::class => Container\ConfigFactory::class,
+                Di\InjectorInterface::class => Container\InjectorFactory::class,
+            ]
+        ]);
+
+        $this->serviceManager->setAllowOverride(true);
+
+        $this->middleware = new MiddlewarePipe();
+
+        $this->server = new RequestHandlerRunner(
+            $this->middleware,
+            new SapiEmitter(),
+            function () {
+                return ServerRequestFactory::fromGlobals();
+            },
+            function (Throwable $e) {
+                return new HtmlResponse('Error: ' . $e->getMessage(), 500);
+            }
+        );
+
+        $debug = debug_backtrace()[0];
+        $this->root = dirname($debug["file"]);
+        /* 
         //create services manager
         $this->serviceManager = new ServiceManager([
             "services" => [
@@ -105,8 +143,6 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
         $this->context->_get = $_GET;
         $this->context->_post = $_POST;
 
-        $this->moduleContainer = new ModuleContainer($this);
-
         //base path
         $this->base_path = dirname($_SERVER["SCRIPT_NAME"]);
         if ($this->base_path == DIRECTORY_SEPARATOR) {
@@ -131,15 +167,15 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
                     $p->call($this, $context, $inject);
                 }
             }
-        }
+        } */
+    }
 
-        //module before
-        try {
-            $this->moduleContainer->ready();
-        } catch (Exception $e) {
-            $this->emitException($e);
-            exit;
-        }
+
+
+    function pipe(MiddlewareInterface $middleware)
+    {
+        $this->middleware->pipe($middleware);
+        return $this;
     }
 
     function getServiceManager(): ServiceManager
@@ -149,6 +185,7 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
 
     function handle(ServerRequestInterface $request): ResponseInterface
     {
+
         $request = $request->withAttribute(ServiceManager::class, $this->serviceManager);
         $this->serviceManager->setService(ServerRequestInterface::class, $request);
         $this->request = $request;
@@ -156,10 +193,10 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
         if (strpos($request->getHeaderLine("Content-Type"), "application/json") !== false) {
             $body = $request->getBody()->getContents();
             $request = $request->withParsedBody(json_decode($body, true));
-            $this->context->_post = $request->getParsedBody();
+            $_POST = $request->getParsedBody();
         }
 
-        $this->context->_files = $request->getUploadedFiles();
+        //$this->context->_files = $request->getUploadedFiles();
 
         $path = $request->getUri()->getPath();
 
@@ -168,7 +205,7 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
             $request_path = "error";
         }
 
-        $route = new Route();
+        /*         $route = new Route();
         $route->path = $request_path;
         $route->query = $request->getQueryParams();
         $route->params = new stdClass;
@@ -176,7 +213,7 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
         $this->context->route = $route;
         $this->context->params = $route->params;
         $this->context->query = $route->query;
-        $this->context->request = $request;
+        $this->context->request = $request; */
 
         if (!$this->router) {
             //load default router
@@ -260,6 +297,14 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
         return $response;
     }
 
+
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
+    {
+        //default handler
+        return $this->handle($request);
+
+        return new HtmlResponse("Hello");
+    }
 
     private function getDefaultRouter(): Router
     {
@@ -380,10 +425,18 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
     /**
      * (new App)->run()
      */
-    public function run()
+    public function run(): void
     {
-        (new SapiEmitter)->emit($this->handle(ServerRequestFactory::fromGlobals()));
+        $this->middleware->pipe($this);
+
+
+
+        $this->server->run();
     }
+
+
+
+
 
     private function generateTagAttr(array $attrs)
     {
