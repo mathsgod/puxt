@@ -66,7 +66,8 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
             "services" => [
                 App::class => $this,
                 EventDispatcherInterface::class => $this->eventDispatcher(),
-            ]
+            ],
+
         ]);
         $this->serviceManager->setService(ServiceManager::class, $this->serviceManager);
 
@@ -143,13 +144,13 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
 
     function getServiceManager(): ServiceManager
     {
-        return $this->service;
+        return $this->serviceManager;
     }
 
     function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $request = $request->withAttribute("service manager", $this->service);
-        $this->service->setService(ServerRequestInterface::class, $request);
+        $request = $request->withAttribute(ServiceManager::class, $this->serviceManager);
+        $this->serviceManager->setService(ServerRequestInterface::class, $request);
         $this->request = $request;
 
         if (strpos($request->getHeaderLine("Content-Type"), "application/json") !== false) {
