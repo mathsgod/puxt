@@ -2,8 +2,6 @@
 
 namespace PUXT;
 
-use Closure;
-use Composer\Autoload\ClassLoader;
 use Exception;
 use Laminas\Config\Config;
 use Laminas\Diactoros\Response\HtmlResponse;
@@ -32,9 +30,7 @@ use Laminas\Di\Container;
 use Laminas\HttpHandlerRunner\RequestHandlerRunner;
 use Laminas\HttpHandlerRunner\RequestHandlerRunnerInterface;
 use Laminas\Stratigility\MiddlewarePipe;
-use Laminas\Stratigility\MiddlewarePipeInterface;
 use Psr\Http\Server\MiddlewareInterface;
-use stdClass;
 use Throwable;
 
 class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerRunnerInterface, MiddlewareInterface
@@ -47,21 +43,14 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
      */
     public $root;
 
-    /**
-     * @var ServerRequestInterface
-     */
-    public $request;
 
     public $base_path;
     public $document_root;
     public $config;
-    public $context;
 
     public $twig;
     protected $twig_extensions = [];
-    public $loader;
     public $router;
-
 
     protected $server;
     protected $middleware;
@@ -69,60 +58,13 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
 
     public function __construct()
     {
-        //service manager
-        $this->serviceManager = new ServiceManager([
-            "services" => [
-                App::class => $this,
-                EventDispatcherInterface::class => $this->eventDispatcher(),
-            ],
-            "factories" => [
-                Di\ConfigInterface::class => Container\ConfigFactory::class,
-                Di\InjectorInterface::class => Container\InjectorFactory::class,
-            ]
-        ]);
-
-        $this->serviceManager->setAllowOverride(true);
-
-        $this->middleware = new MiddlewarePipe();
-
-        $this->server = new RequestHandlerRunner(
-            $this->middleware,
-            new SapiEmitter(),
-            function () {
-                return ServerRequestFactory::fromGlobals();
-            },
-            function (Throwable $e) {
-                return new HtmlResponse('Error: ' . $e->getMessage(), 500);
-            }
-        );
-
         $debug = debug_backtrace()[0];
         $this->root = dirname($debug["file"]);
-        /* 
-        //create services manager
-        $this->serviceManager = new ServiceManager([
-            "services" => [
-                App::class => $this,
-                EventDispatcherInterface::class => $this->eventDispatcher(),
-            ],
 
-        ]);
-        $this->serviceManager->setService(ServiceManager::class, $this->serviceManager);
+        //env
+        \Dotenv\Dotenv::createImmutable($this->root)->safeLoad();
 
-        $this->serviceManager->setFactory(Di\ConfigInterface::class, Container\ConfigFactory::class);
-        $this->serviceManager->setFactory(Di\InjectorInterface::class, Container\InjectorFactory::class);
-
-        $this->serviceManager->setAllowOverride(true);
-
-
-        if (!$root) {
-            $debug = debug_backtrace()[0];
-            $root = dirname($debug["file"]);
-        }
-
-        $this->root = $root;
-        $this->loader = $loader;
-
+        //config
         $this->config = new Config([
             "dir" => [
                 "layouts" => "layouts",
@@ -130,19 +72,49 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
             ]
         ], true);
 
-
-        if (file_exists($file = $root . "/puxt.config.php")) {
+        if (file_exists($file = $this->root . "/puxt.config.php")) {
             $this->config->merge(new Config(include $file));
         }
 
+
+        //service manager
+        $this->serviceManager = new ServiceManager([
+            "services" => [
+                App::class => $this,
+                EventDispatcherInterface::class => $this->eventDispatcher(),
+                Config::class => $this->config,
+            ],
+            "factories" => [
+                Di\ConfigInterface::class => Container\ConfigFactory::class,
+                Di\InjectorInterface::class => Container\InjectorFactory::class,
+            ]
+        ]);
+        $this->serviceManager->setAllowOverride(true);
+
+        $this->middleware = new MiddlewarePipe();
+
+
+        //request attributes
+        $serviceManager = $this->serviceManager;
+        $this->server = new RequestHandlerRunner(
+            $this->middleware,
+            new SapiEmitter(),
+            function () use ($serviceManager) {
+                $request = ServerRequestFactory::fromGlobals();
+                return $request->withAttribute(ServiceManager::class, $serviceManager);
+            },
+            function (Throwable $e) {
+                return new HtmlResponse('Error: ' . $e->getMessage(), 500);
+            }
+        );
+
+
+        /* 
+        //create services manager
+
+
         \Dotenv\Dotenv::createImmutable($root)->safeLoad();
-
-        $this->context = new Context;
-        $this->context->config = $this->config;
-        $this->context->root = $root;
-        $this->context->_get = $_GET;
-        $this->context->_post = $_POST;
-
+    
         //base path
         $this->base_path = dirname($_SERVER["SCRIPT_NAME"]);
         if ($this->base_path == DIRECTORY_SEPARATOR) {
@@ -186,25 +158,22 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
     function handle(ServerRequestInterface $request): ResponseInterface
     {
 
-        $request = $request->withAttribute(ServiceManager::class, $this->serviceManager);
-        $this->serviceManager->setService(ServerRequestInterface::class, $request);
-        $this->request = $request;
-
+        /* 
         if (strpos($request->getHeaderLine("Content-Type"), "application/json") !== false) {
             $body = $request->getBody()->getContents();
             $request = $request->withParsedBody(json_decode($body, true));
             $_POST = $request->getParsedBody();
-        }
+        } */
 
         //$this->context->_files = $request->getUploadedFiles();
 
-        $path = $request->getUri()->getPath();
+        /*     $path = $request->getUri()->getPath();
 
         $request_path = substr($path, strlen($this->base_path));
         if ($request_path === false) {
             $request_path = "error";
         }
-
+ */
         /*         $route = new Route();
         $route->path = $request_path;
         $route->query = $request->getQueryParams();
@@ -215,15 +184,13 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
         $this->context->query = $route->query;
         $this->context->request = $request; */
 
-        if (!$this->router) {
-            //load default router
-            $this->router = $this->getDefaultRouter();
-        }
+
+        //load default router
+        $router = $this->getRouter();
 
         try {
-            $response = $this->router->dispatch($request);
+            $response = $router->dispatch($request);
         } catch (HttpException $e) {
-
 
             $code = $e->getStatusCode();
             if ($code < 100 || $code > 599) {
@@ -302,17 +269,15 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
     {
         //default handler
         return $this->handle($request);
-
-        return new HtmlResponse("Hello");
     }
 
-    private function getDefaultRouter(): Router
+    private function getRouter(): Router
     {
         $router = new Router();
 
         $router->addPatternMatcher("any", ".+");
 
-        $base_path = $this->root . DIRECTORY_SEPARATOR . $this->config["dir"]["pages"];
+        $base_path = $this->root . DIRECTORY_SEPARATOR . "pages";
 
         $adapter = new \League\Flysystem\Local\LocalFilesystemAdapter($base_path);
         $fs = new \League\Flysystem\Filesystem($adapter);
@@ -352,47 +317,32 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
 
         $files = array_unique($files);
         foreach ($files as $s) {
-            $data[$s] = $base_path . DIRECTORY_SEPARATOR . $s;
+            $data["/" . $s] = $base_path . DIRECTORY_SEPARATOR . $s;
         }
 
         //root index
         if ($fs->fileExists("index.php") || $fs->fileExists("index.html") || $fs->fileExists("index.twig")) {
-            $data[""] = $base_path . DIRECTORY_SEPARATOR . "index";
+            $data["/"] = $base_path . DIRECTORY_SEPARATOR . "index";
         }
 
         $methods = ["GET", "POST", "PATCH", "PUT", "DELETE"];
         foreach ($data as $path => $file) {
             foreach ($methods as $method) {
                 $path = str_replace("@", ":", $path);
-
-                $router->map($method, $this->base_path . $path, function (ServerRequestInterface $request, array $args) use ($file) {
-
-                    foreach ($args as $k => $v) {
-                        $this->context->params->$k = $v;
-                    }
-                    $request = $request->withAttribute("context", $this->context);
+                $router->map($method,  $path, function (ServerRequestInterface $request, array $args) use ($file) {
+                    $request = $request->withAttribute("context", [
+                        "params" => $args
+                    ]);
 
                     $twig = $this->getTwig(new \Twig\Loader\FilesystemLoader([$this->root]));
                     $request = $request->withAttribute("twig", $twig);
 
-                    RequestHandler::Create($file)->handle($request);
+                    return RequestHandler::Create($file)->handle($request);
                 });
             }
         }
+
         return $router;
-    }
-
-    function setRouter(Router $router)
-    {
-        $this->router = $router;
-    }
-
-    function getRouter()
-    {
-        if (!$this->router) {
-            $this->router = new Router();
-        }
-        return $this->router;
     }
 
     function emitException(Exception $e)
@@ -428,15 +378,8 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
     public function run(): void
     {
         $this->middleware->pipe($this);
-
-
-
         $this->server->run();
     }
-
-
-
-
 
     private function generateTagAttr(array $attrs)
     {
@@ -499,20 +442,6 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
     public function getTemplate(string $file)
     {
         return $this->getTwig()->load($file);
-    }
-
-    public function callHook(string $name, $args)
-    {
-        if ($this->_hooks[$name]) {
-            foreach ($this->_hooks[$name] as $hook) {
-                $hook($args);
-            }
-        }
-    }
-
-    public function hook(string $name, callable $fn)
-    {
-        $this->_hooks[$name][] = $fn;
     }
 
     public function getTwig(LoaderInterface $loader = null)
