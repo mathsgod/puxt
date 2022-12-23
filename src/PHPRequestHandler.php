@@ -10,6 +10,7 @@ use Laminas\Diactoros\Response\EmptyResponse;
 use Laminas\Diactoros\Response\HtmlResponse;
 use Laminas\Diactoros\Response\JsonResponse;
 use Laminas\Diactoros\Response\TextResponse;
+use Laminas\ServiceManager\ServiceManager;
 use League\Route\Http\Exception\HttpExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -145,7 +146,7 @@ class PHPRequestHandler extends RequestHandler
         /**
          * @var ContainerInterface
          */
-        $container = $request->getAttribute("service manager");
+        $container = $request->getAttribute(ServiceManager::class);
 
         if (is_object($this->stub)) {
             $ref_obj = new ReflectionObject($this->stub);

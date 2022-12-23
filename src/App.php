@@ -27,6 +27,7 @@ use Twig\Extension\ExtensionInterface;
 use Twig\Loader\LoaderInterface;
 use Laminas\Di;
 use Laminas\Di\Container;
+use Laminas\Di\InjectorInterface;
 use Laminas\HttpHandlerRunner\RequestHandlerRunner;
 use Laminas\HttpHandlerRunner\RequestHandlerRunnerInterface;
 use Laminas\Stratigility\MiddlewarePipe;
@@ -89,6 +90,7 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
                 Di\InjectorInterface::class => Container\InjectorFactory::class,
             ]
         ]);
+        $this->serviceManager->setService(ServiceManager::class, $this->serviceManager);
         $this->serviceManager->setAllowOverride(true);
 
         $this->middleware = new MiddlewarePipe();
@@ -142,10 +144,17 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
         } */
     }
 
-
-
-    function pipe(MiddlewareInterface $middleware)
+    function getInjector(): InjectorInterface
     {
+        return $this->serviceManager->get(InjectorInterface::class);
+    }
+
+    function pipe(MiddlewareInterface|string $middleware)
+    {
+        if (is_string($middleware)) {
+            $middleware = $this->getInjector()->create($middleware);
+        }
+
         $this->middleware->pipe($middleware);
         return $this;
     }
