@@ -11,14 +11,11 @@ class TwigRequestHandler extends RequestHandler
 {
     function handle(ServerRequestInterface $request): ResponseInterface
     {
-
-      
         /** @var Environment $twig */
-        $twig = $request->getAttribute('twig');
-        $context = $request->getAttribute('context');
+        $twig = $request->getAttribute(\Twig\Environment::class);
 
         if ($twig->getLoader()->exists($this->file)) {
-            $html = $twig->render($this->file, $context);
+            $html = $twig->render($this->file, []);
             return new HtmlResponse($html);
         } else {
 
@@ -26,9 +23,8 @@ class TwigRequestHandler extends RequestHandler
             $twig->setLoader(new \Twig\Loader\ArrayLoader([
                 "page" => file_get_contents($this->file)
             ]));
-            $html = $twig->render("page", (array)$context);
+            $html = $twig->render("page", []);
             return new HtmlResponse($html);
         }
-
     }
 }

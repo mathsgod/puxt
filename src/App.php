@@ -167,6 +167,7 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
     function handle(ServerRequestInterface $request): ResponseInterface
     {
 
+      
         /* 
         if (strpos($request->getHeaderLine("Content-Type"), "application/json") !== false) {
             $body = $request->getBody()->getContents();
@@ -341,12 +342,8 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
             foreach ($methods as $method) {
                 $path = str_replace("@", ":", $path);
                 $router->map($method,  $path, function (ServerRequestInterface $request, array $args) use ($file) {
-                    $request = $request->withAttribute("context", [
-                        "params" => $args
-                    ]);
-
                     $twig = $this->getTwig(new \Twig\Loader\FilesystemLoader([$this->root]));
-                    $request = $request->withAttribute("twig", $twig);
+                    $request = $request->withAttribute(\Twig\Environment::class, $twig);
 
                     return RequestHandler::Create($file)->handle($request);
                 });

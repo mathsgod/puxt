@@ -4,7 +4,6 @@ namespace PUXT;
 
 use Closure;
 use Exception;
-use Generator;
 use JsonSerializable;
 use Laminas\Diactoros\Response\EmptyResponse;
 use Laminas\Diactoros\Response\HtmlResponse;
@@ -25,18 +24,23 @@ use Twig\Environment;
 class PHPRequestHandler extends RequestHandler
 {
     private $stub;
-    private $context;
+
+    private $twig_content;
+    private $layout;
+    private $app;
+    private $service;
 
     /**
      *  @var MiddlewareInterface []
      **/
     public $middleware = [];
 
-    function handle(ServerRequestInterface $request): ResponseInterface
+    function __construct(string $file)
     {
+        parent::__construct($file);
 
         ob_start();
-        $this->stub = require($this->file);
+        $this->stub = require($file);
         $this->twig_content = ob_get_contents();
         ob_end_clean();
 
@@ -46,18 +50,21 @@ class PHPRequestHandler extends RequestHandler
             $file = getcwd() . DIRECTORY_SEPARATOR . "middleware" . DIRECTORY_SEPARATOR . $middleware . ".php";
             if (file_exists($file)) {
                 $middleware = require($file);
-                /*      if ($middleware instanceof MiddlewareInterface) {
-                    $response = $middleware->process($request, $this);
-                    if ($response instanceof ResponseInterface) {
-                        return $response;
-                    }
-                } */
+                if ($middleware instanceof MiddlewareInterface) {
+                    $this->middleware[] = $middleware;
+                }
             }
         }
+    }
+
+    function handle(ServerRequestInterface $request): ResponseInterface
+    {
+        $this->service = $request->getAttribute(ServiceManager::class);
+        $this->app = $this->service->get(App::class);
 
         $response = $this->handleRequest($request);
 
-        if ($request->getMethod() == "GET" && $this->layout) {
+        if ($request->getMethod() == "GET") {
             try {
                 $h = RequestHandler::Create("layouts/" . $this->layout);
 
@@ -75,7 +82,6 @@ class PHPRequestHandler extends RequestHandler
 
     private function handleRequest(ServerRequestInterface $request): ResponseInterface
     {
-        $this->request = $request;
         if ($this->stub instanceof RequestHandlerInterface) {
             $response = $this->stub->handle($request);
             //head
@@ -85,11 +91,7 @@ class PHPRequestHandler extends RequestHandler
             return $response;
         } else {
 
-            $this->context = $request->getAttribute("context");
-
-            $this->processProps();
             $this->processVerb("created", $request);
-
 
             //--- entry ---
             $params = $request->getQueryParams();
@@ -133,7 +135,8 @@ class PHPRequestHandler extends RequestHandler
             }
 
             if ($verb == "GET") {
-                return new HtmlResponse($this->render("", $request->getAttribute("twig")));
+
+                return new HtmlResponse($this->render($request->getAttribute(\Twig\Environment::class)));
             }
 
             return new EmptyResponse(200);
@@ -148,156 +151,66 @@ class PHPRequestHandler extends RequestHandler
          */
         $container = $request->getAttribute(ServiceManager::class);
 
-        if (is_object($this->stub)) {
-            $ref_obj = new ReflectionObject($this->stub);
-            if ($ref_obj->hasMethod($verb)) {
+        $ref_obj = new ReflectionObject($this->stub);
+        if ($ref_obj->hasMethod($verb)) {
 
-                $ref_method = $ref_obj->getMethod($verb);
+            $ref_method = $ref_obj->getMethod($verb);
 
-                $args = [];
+            $args = [];
 
-                foreach ($ref_method->getParameters() as $param) {
-                    if ($type = $param->getType()) {
+            foreach ($ref_method->getParameters() as $param) {
+                if ($type = $param->getType()) {
 
-                        if ($container->has($type->getName())) {
-                            $args[] = $container->get($type->getName());
-                        } else {
-                            $args[] = null;
-                        }
+                    if ($container->has($type->getName())) {
+                        $args[] = $container->get($type->getName());
                     } else {
                         $args[] = null;
                     }
+                } else {
+                    $args[] = null;
                 }
-                return $ref_obj->getMethod($verb)->invoke($this->stub, ...$args);
             }
-        } else {
-            $func = $this->stub[strtolower($verb)];
-            if ($func instanceof Closure) {
-                $ret = $func->call($this->component, $this->context);
-
-                if ($ret instanceof Generator) {
-                    return iterator_to_array($ret);
-                }
-                return $ret;
-            }
+            return $ref_obj->getMethod($verb)->invoke($this->stub, ...$args);
         }
     }
 
     public function processEntry(string $entry, ServerRequestInterface $request)
     {
-        if (is_object($this->stub)) {
-            return $this->processVerb($entry, $request);
-        } else {
-            $act = $this->stub["entries"][$entry];
-            if ($act instanceof Closure) {
-                return $act->call($this->component, $this->context);
-            }
-        }
+        return $this->processVerb($entry, $request);
     }
 
-    public function processProps()
-    {
-        if (is_object($this->stub)) {
-            return;
-        }
-        //props
-        $props = $this->stub["props"] ?? [];
-        foreach ($props as $name => $value) {
-
-
-            $type = $value;
-            $default = "";
-            $required = false;
-
-            if (is_array($value)) {
-                $type = $value["type"];
-                $default = $value["default"];
-                $required = (bool) $value["required"];
-            }
-
-
-            if ($required && !isset($_GET[$name])) {
-                throw new Exception("props [$name] is required");
-            }
-
-
-            if (isset($_GET[$name])) {
-                $default = $_GET[$name];
-            }
-
-            if ($type == "string") {
-                $this->component->$name = (string)$default;
-            } elseif ($type == "int") {
-                $this->component->$name = intval($default);
-            } elseif ($type == "float") {
-                $this->component->$name = floatval($default);
-            } elseif ($type == "object") {
-                $this->component->$name = $default;
-                if ($default instanceof Closure) {
-                    $this->component->$name = $default->call($this->context);
-                }
-            } elseif ($type == "array") {
-                $this->component->$name = $default;
-                if ($default instanceof Closure) {
-                    $this->component->$name = $default->call($this->context);
-                }
-                $this->component->$name = array_values($this->component->$name);
-            }
-        }
-    }
-
-    public function render($puxt, ?Environment $twig_env)
+    public function render(?Environment $twig_env)
     {
 
         if (!$twig_env) {
-            return "twig enviroment is null";
+            throw new Exception("twig env is null");
         }
 
-        if (is_object($this->stub)) {
-            $stub = $this->stub;
-            $ref_obj = new ReflectionObject($this->stub);
-            foreach ($ref_obj->getMethods(ReflectionMethod::IS_PROTECTED | ReflectionMethod::IS_PUBLIC) as $method) {
-
-                $twig_env->addFunction(new TwigFunction($method->name, function () use ($method, $stub) {
-
-                    $args = func_get_args();
-                    $name = $method->name;
-                    return  Closure::bind(
-                        function ($class) use ($name, $args) {
-                            return call_user_func_array([$class, $name], $args);
-                        },
-                        $stub,
-                        get_class($stub)
-                    )($stub);
-                }));
-            }
-            $data = (array)$this->stub;
-            $data["_params"] = $this->context->params;
-            $data["_route"] = $this->context->route;
-            $data["_config"] = $this->context->config;
-            $name = $this->context->config["context"]["name"] ?? "_puxt";
-            $data[$name] = $this->context;
-        } else {
-            $data = (array)$this->component;
-            $data["puxt"] = $puxt;
-            $data["_params"] = $this->context->params;
-            $data["_route"] = $this->context->route;
-            $data["_config"] = $this->context->config;
-            if ($this->context->i18n) {
-                $data["_i18n"] = $this->context->i18n;
-            }
-            $name = $this->context->config["context"]["name"] ?? "_puxt";
-            $data[$name] = $this->context;
+        $stub = $this->stub;
+        $ref_obj = new ReflectionObject($this->stub);
+        foreach ($ref_obj->getMethods(ReflectionMethod::IS_PROTECTED | ReflectionMethod::IS_PUBLIC) as $method) {
+            $twig_env->addFunction(new TwigFunction($method->name, function () use ($method, $stub) {
+                $args = func_get_args();
+                $name = $method->name;
+                return  Closure::bind(
+                    function ($class) use ($name, $args) {
+                        return call_user_func_array([$class, $name], $args);
+                    },
+                    $stub,
+                    get_class($stub)
+                )($stub);
+            }));
         }
+
+        $data = (array)$this->stub;
 
         try {
             $twig_file = substr($this->file, 0, -strlen("php")) . "twig";
 
-
             if (file_exists($twig_file)) {
 
                 //remove root
-                $twig_file = substr($twig_file, strlen($this->context->root));
+                $twig_file = substr($twig_file, strlen($this->app->root));
 
                 $twig = $twig_env->load($twig_file);
             } else {
