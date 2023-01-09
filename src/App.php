@@ -152,10 +152,18 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
     function pipe(MiddlewareInterface|string $middleware)
     {
         if (is_string($middleware)) {
-            $middleware = $this->getInjector()->create($middleware);
+            try {
+                $middleware = $this->getInjector()->create($middleware);
+            } catch (Exception $e) {
+                $this->emitException($e);
+            }
+            return;
         }
 
-        $this->middleware->pipe($middleware);
+        if ($middleware instanceof MiddlewareInterface) {
+            $this->middleware->pipe($middleware);
+        }
+        
         return $this;
     }
 
@@ -167,7 +175,7 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
     function handle(ServerRequestInterface $request): ResponseInterface
     {
 
-      
+
         /* 
         if (strpos($request->getHeaderLine("Content-Type"), "application/json") !== false) {
             $body = $request->getBody()->getContents();
