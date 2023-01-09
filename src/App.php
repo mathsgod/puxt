@@ -156,14 +156,15 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
                 $middleware = $this->getInjector()->create($middleware);
             } catch (Exception $e) {
                 $this->emitException($e);
+                return;
             }
-            return;
+            
         }
 
         if ($middleware instanceof MiddlewareInterface) {
             $this->middleware->pipe($middleware);
         }
-        
+
         return $this;
     }
 
