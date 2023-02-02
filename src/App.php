@@ -56,6 +56,7 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
     protected $server;
     protected $middleware;
     protected $serviceManager;
+    protected $base;
 
     public function __construct()
     {
@@ -110,7 +111,10 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
             }
         );
 
-
+        $this->base = dirname($_SERVER["SCRIPT_NAME"]);
+        if ($this->base == "/") {
+            $this->base = "";
+        }
         /* 
         //create services manager
 
@@ -158,7 +162,6 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
                 $this->emitException($e);
                 return;
             }
-            
         }
 
         if ($middleware instanceof MiddlewareInterface) {
@@ -350,7 +353,7 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
         foreach ($data as $path => $file) {
             foreach ($methods as $method) {
                 $path = str_replace("@", ":", $path);
-                $router->map($method,  $path, function (ServerRequestInterface $request, array $args) use ($file) {
+                $router->map($method,   $this->base . $path, function (ServerRequestInterface $request, array $args) use ($file) {
                     $twig = $this->getTwig(new \Twig\Loader\FilesystemLoader([$this->root]));
                     $request = $request->withAttribute(\Twig\Environment::class, $twig);
 
