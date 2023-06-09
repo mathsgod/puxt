@@ -67,7 +67,6 @@ class PHPRequestHandler extends RequestHandler
         if ($request->getMethod() == "GET") {
             try {
                 $h = RequestHandler::Create("layouts/" . $this->layout);
-
                 $request = $request->withAttribute("context", [
                     "puxt" => $response->getBody()->getContents()
                 ]);

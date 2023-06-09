@@ -277,13 +277,17 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
             $code = 500;
         }
 
-        $message = $_ENV["DEUBG"] ? $e->getMessage() : "Internal Server Error";
+
+        $message = "Internal Server Error";
+        if ($_ENV["DEBUG"]) {
+            $message = $e->getMessage();
+        }
 
         if ($_ENV["DEBUG_EXCEPTION_FORMAT"] == "json") {
             $response = new JsonResponse([
                 "error" => [
                     "code" => $e->getCode(),
-                    "message" => $e->getMessage(),
+                    "message" => $message,
                     "line" => $e->getLine(),
                     "file" => $e->getFile(),
                     "trace" => $e->getTraceAsString()
@@ -292,7 +296,10 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
             ]);
             $response = $response->withStatus($code, $e->getMessage());
         } else {
-            $response = new HtmlResponse($message . "<br><br><pre>" . $e->getTraceAsString() . "</pre>", 500);
+            if ($_ENV["DEBUG"]) {
+                $message .= "<pre>" . $e->getTraceAsString() . "</pre>";
+            }
+            $response = new HtmlResponse($message, 500);
         }
         return $response;
     }
