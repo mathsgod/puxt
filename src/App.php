@@ -155,12 +155,7 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
         } catch (HttpException $e) {
             return new HtmlResponse($e->getMessage(),  $e->getStatusCode());
         } catch (Exception $e) {
-            $message = $e->getMessage();
-            //hide message if debug is off and error is 500
-            if (!$_ENV["DEBUG"]) {
-                $message = "Internal Server Error";
-            }
-            return new HtmlResponse($message, 500);
+            return $this->generateResponseFromException($e);
         }
 
         if (
@@ -275,7 +270,7 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
         return $router;
     }
 
-    function emitException(Exception $e)
+    function generateResponseFromException(Exception $e)
     {
         $code = $e->getCode();
         if ($code < 100 || $code > 599) {
@@ -299,8 +294,12 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
         } else {
             $response = new HtmlResponse($message . "<br><br><pre>" . $e->getTraceAsString() . "</pre>", 500);
         }
+        return $response;
+    }
 
-        (new SapiEmitter())->emit($response);
+    function emitException(Exception $e)
+    {
+        (new SapiEmitter())->emit($this->generateResponseFromException($e));
     }
 
     public function addExtension(ExtensionInterface $extension)
