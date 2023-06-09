@@ -14,8 +14,6 @@ return new class{
 
 It will output `Hello world` in the browser when reqeust to `/` path.
 
-
-
 ## Debug
 Set the `DEBUG` environment variable to `true` to enable debug mode.
 ```env
