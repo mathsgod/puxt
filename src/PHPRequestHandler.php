@@ -10,6 +10,7 @@ use Laminas\Diactoros\Response\HtmlResponse;
 use Laminas\Diactoros\Response\JsonResponse;
 use Laminas\Diactoros\Response\TextResponse;
 use Laminas\ServiceManager\ServiceManager;
+use Laminas\Stdlib\RequestInterface;
 use League\Route\Http\Exception\HttpExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -66,7 +67,7 @@ class PHPRequestHandler extends RequestHandler
 
         if ($request->getMethod() == "GET") {
             try {
-                $h = RequestHandler::Create("layouts/" . $this->layout);
+                $h = RequestHandler::Create($this->app->root . "/layouts/" . $this->layout);
                 $request = $request->withAttribute("context", [
                     "puxt" => $response->getBody()->getContents()
                 ]);
@@ -135,7 +136,7 @@ class PHPRequestHandler extends RequestHandler
 
             if ($verb == "GET") {
 
-                return new HtmlResponse($this->render($request->getAttribute(\Twig\Environment::class)));
+                return new HtmlResponse($this->render($request));
             }
 
             return new EmptyResponse(200);
@@ -178,8 +179,10 @@ class PHPRequestHandler extends RequestHandler
         return $this->processVerb($entry, $request);
     }
 
-    public function render(?Environment $twig_env)
+    public function render(ServerRequestInterface $request)
     {
+
+        $twig_env = $request->getAttribute(\Twig\Environment::class);
 
         if (!$twig_env) {
             throw new Exception("twig env is null");
@@ -203,14 +206,15 @@ class PHPRequestHandler extends RequestHandler
 
         $data = (array)$this->stub;
 
+        $context = $request->getAttribute("context", []);
+        $data["puxt"] = $context["puxt"] ?? null;
+
         try {
             $twig_file = substr($this->file, 0, -strlen("php")) . "twig";
 
             if (file_exists($twig_file)) {
-
                 //remove root
                 $twig_file = substr($twig_file, strlen($this->app->root));
-
                 $twig = $twig_env->load($twig_file);
             } else {
                 $twig_env->setLoader(new \Twig\Loader\ArrayLoader([
