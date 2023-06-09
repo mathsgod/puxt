@@ -127,7 +127,7 @@ class PHPRequestHandler extends RequestHandler
             }
 
             if (is_array($ret) || $ret instanceof JsonSerializable) {
-                return new JsonResponse($ret);
+                return new JsonResponse($ret, 200, [], JsonResponse::DEFAULT_JSON_FLAGS | JSON_UNESCAPED_UNICODE);
             }
 
             if (is_string($ret)) {
