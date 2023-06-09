@@ -32,6 +32,7 @@ use Laminas\Diactoros\ResponseFactory;
 use Laminas\HttpHandlerRunner\RequestHandlerRunner;
 use Laminas\HttpHandlerRunner\RequestHandlerRunnerInterface;
 use Laminas\Stratigility\MiddlewarePipe;
+use League\Route\RouteGroup;
 use League\Route\Strategy\JsonStrategy;
 use Psr\Http\Server\MiddlewareInterface;
 use Throwable;
@@ -149,6 +150,13 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
         //load default router
         $router = $this->getRouter();
 
+        /*         $router->group($this->base, function (RouteGroup $route) {
+            $route->get("/", function () {
+                return new HtmlResponse("Hello World");
+            });
+        });
+ */
+
 
         try {
             $response = $router->dispatch($request);
@@ -245,21 +253,20 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
 
         $files = array_unique($files);
         foreach ($files as $s) {
-            $data[$this->base . $s] = $base_path . DIRECTORY_SEPARATOR . $s;
+            $data[$s] = $base_path . DIRECTORY_SEPARATOR . $s;
         }
 
         //root index
         if ($fs->fileExists("index.php") || $fs->fileExists("index.html") || $fs->fileExists("index.twig")) {
-            $data[$this->base] = $base_path . DIRECTORY_SEPARATOR . "index";
+            $data[""] = $base_path . DIRECTORY_SEPARATOR . "index";
         }
-
-
 
         $methods = ["GET", "POST", "PATCH", "PUT", "DELETE"];
         foreach ($data as $path => $file) {
             foreach ($methods as $method) {
                 $path = str_replace("@", ":", $path);
-                $router->map($method,  $path, function (ServerRequestInterface $request, array $args) use ($file) {
+                //echo $this->base . "/" . $path . "\n";
+                $router->map($method, $this->base . "/" . $path, function (ServerRequestInterface $request, array $args) use ($file) {
                     $twig = $this->getTwig(new \Twig\Loader\FilesystemLoader([$this->root]));
                     $request = $request->withAttribute(\Twig\Environment::class, $twig);
                     return RequestHandler::Create($file)->handle($request);
@@ -267,6 +274,7 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
             }
         }
 
+       
         return $router;
     }
 
