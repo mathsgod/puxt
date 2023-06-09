@@ -12,8 +12,11 @@
     "autoload": {
         "psr-4": {
             "PUXT\\": "src"
-        }
-    },
+        },
+        "files": [
+            "function/puxt.php"
+        ]
+    },    
     "require": {
         "php": "^7.3 || ~8.0.0",
         "twig/twig": "^3.4",

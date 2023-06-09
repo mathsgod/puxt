@@ -61,8 +61,16 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
     protected $serviceManager;
     protected $base;
 
+    protected $head = [];
+
+
+    static $instance;
+
     public function __construct()
     {
+        self::$instance = $this;
+
+
         $debug = debug_backtrace()[0];
         $this->root = dirname($debug["file"]);
 
@@ -122,6 +130,11 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
         return $this->serviceManager->get(InjectorInterface::class);
     }
 
+    function useHead(array $head)
+    {
+        $this->head = $head;
+    }
+
     function pipe(MiddlewareInterface|string $middleware)
     {
         if (is_string($middleware)) {
@@ -150,14 +163,6 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
         //load default router
         $router = $this->getRouter();
 
-        /*         $router->group($this->base, function (RouteGroup $route) {
-            $route->get("/", function () {
-                return new HtmlResponse("Hello World");
-            });
-        });
- */
-
-
         try {
             $response = $router->dispatch($request);
         } catch (HttpException $e) {
@@ -169,20 +174,14 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
         if (
             $request->getMethod() == "GET"
             && strpos($request->getHeaderLine("Accept"), "text/html") !== false
-            && $response->getHeaderLine("Content-Type") == "text/html"
+            && strpos($response->getHeaderLine("Content-Type"), "text/html") !== false
         ) {
-
-            if ($head = $response->getHeaderLine("puxt-head")) {
-                $head = json_decode($head, true);
-                $response = $response->withoutHeader("puxt-head");
-            } else {
-                $head = $this->config->head ?? [];
-            }
 
             $app_template = $this->getAppTemplate();
             $data = [];
             $data["app"] = $response->getBody()->getContents();
-            $data["head"] = $this->generateHeader($head);
+            $data["head"] = $this->generateHeader($this->head);
+            
             $data["html_attrs"] = $this->generateTagAttr($head["htmlAttrs"] ?? []);
             $data["head_attrs"] = $this->generateTagAttr($head["headAttrs"] ?? []);
             $data["body_attrs"] = $this->generateTagAttr($head["bodyAttrs"] ?? []);
@@ -274,7 +273,7 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
             }
         }
 
-       
+
         return $router;
     }
 
