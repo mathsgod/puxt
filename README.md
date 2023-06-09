@@ -6,7 +6,7 @@ Set the `DEBUG` environment variable to `true` to enable debug mode.
 DEBUG=true
 ```
 
-### Exception format
+## Exception format
 Set the `DEBUG_EXCEPTION_FORMAT` environment variable to `json` to enable exception format.
 ```env
 DEBUG_EXCEPTION_FORMAT=json
