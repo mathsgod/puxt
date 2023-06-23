@@ -32,7 +32,7 @@
         "laminas/laminas-diactoros": "^2.11",
         "laminas/laminas-config": "^3.7",
         "laminas/laminas-servicemanager": "^3.7",
-        "laminas/laminas-di": "^3.11",
+        "laminas/laminas-di": "^3.3",
         "laminas/laminas-stratigility": "^3.9"
     },
     "require-dev": {
