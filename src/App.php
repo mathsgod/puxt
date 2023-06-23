@@ -135,7 +135,10 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
         $this->head = $head;
     }
 
-    function pipe(MiddlewareInterface|string $middleware)
+    /**
+     * @param MiddlewareInterface|string $middleware
+     */
+    function pipe($middleware)
     {
         if (is_string($middleware)) {
             try {
@@ -181,7 +184,7 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
             $data = [];
             $data["app"] = $response->getBody()->getContents();
             $data["head"] = $this->generateHeader($this->head);
-            
+
             $data["html_attrs"] = $this->generateTagAttr($head["htmlAttrs"] ?? []);
             $data["head_attrs"] = $this->generateTagAttr($head["headAttrs"] ?? []);
             $data["body_attrs"] = $this->generateTagAttr($head["bodyAttrs"] ?? []);
@@ -204,7 +207,7 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
     {
         $router = new Router();
 
-        if ($_ENV["ROUTE_STRATEGY"] == "json") {
+        if (isset($_ENV["ROUTE_STRATEGY"]) && $_ENV["ROUTE_STRATEGY"] == "json") {
             $strategy = new JsonStrategy(new ResponseFactory());
             $router->setStrategy($strategy);
         }

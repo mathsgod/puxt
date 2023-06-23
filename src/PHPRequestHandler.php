@@ -96,7 +96,7 @@ class PHPRequestHandler extends RequestHandler
             //--- entry ---
             $params = $request->getQueryParams();
 
-            if (in_array("_entry", $params) || $entry = $params["_entry"]) {
+            if (isset($params["_entry"]) && $entry = $params["_entry"]) {
                 $ret = $this->processEntry($entry, $request);
                 if ($ret instanceof ResponseInterface) {
                     return $ret;
