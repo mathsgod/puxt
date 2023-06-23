@@ -33,7 +33,7 @@
         "laminas/laminas-config": "^3.7",
         "laminas/laminas-servicemanager": "^3.7",
         "laminas/laminas-di": "^3.3",
-        "laminas/laminas-stratigility": "^3.9"
+        "laminas/laminas-stratigility": "^3.5"
     },
     "require-dev": {
         "hostlink/puxt-vue-loader": "^1.0",
