@@ -122,7 +122,11 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
             }
         );
 
-        $this->base = $_ENV["BASE_PATH"] ?? "/";
+        $this->base = $_ENV["BASE_PATH"];
+        //if base path is end with "/", remove it
+        if (substr($this->base, -1) == "/") {
+            $this->base = substr($this->base, 0, -1);
+        }
     }
 
     function getInjector(): InjectorInterface
@@ -138,7 +142,7 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
     /**
      * @param MiddlewareInterface|string $middleware
      */
-    function pipe($middleware)
+    function pipe(mixed $middleware)
     {
         if (is_string($middleware)) {
             try {
@@ -230,12 +234,11 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
             return  ["path" => $attributes->path()];
         })->toArray();
 
-
         $data = [];
         foreach ($dirs as $dir) {
             $path = $dir["path"];
             $p = str_replace(DIRECTORY_SEPARATOR, "/", $path) . "/";
-            $data[$p] = $base_path . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . "index";
+            $data["/" . $p] = $base_path . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . "index";
         }
 
         $files = $fs->listContents('/', true)->filter(function (StorageAttributes $attributes) {
@@ -252,30 +255,29 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
             return $path;
         })->toArray();
 
-
         $files = array_unique($files);
         foreach ($files as $s) {
-            $data[$s] = $base_path . DIRECTORY_SEPARATOR . $s;
+            $data["/" . $s] = $base_path . DIRECTORY_SEPARATOR . $s;
         }
 
         //root index
         if ($fs->fileExists("index.php") || $fs->fileExists("index.html") || $fs->fileExists("index.twig")) {
             $data[""] = $base_path . DIRECTORY_SEPARATOR . "index";
+            $data["/"] = $base_path . DIRECTORY_SEPARATOR . "index";
         }
+
 
         $methods = ["GET", "POST", "PATCH", "PUT", "DELETE"];
         foreach ($data as $path => $file) {
             foreach ($methods as $method) {
                 $path = str_replace("@", ":", $path);
-                //echo $this->base . "/" . $path . "\n";
-                $router->map($method, $this->base . "/" . $path, function (ServerRequestInterface $request, array $args) use ($file) {
+                $router->map($method, $this->base . $path, function (ServerRequestInterface $request, array $args) use ($file) {
                     $twig = $this->getTwig(new \Twig\Loader\FilesystemLoader([$this->root]));
                     $request = $request->withAttribute(\Twig\Environment::class, $twig);
                     return RequestHandler::Create($file)->handle($request);
                 });
             }
         }
-
 
         return $router;
     }
