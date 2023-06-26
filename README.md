@@ -26,9 +26,13 @@ Set the `DEBUG_EXCEPTION_FORMAT` environment variable to `json` to enable except
 DEBUG_EXCEPTION_FORMAT=json
 ```
 
-## Base path of uri    
+## Base path of uri
 Set the `BASE_PATH` environment variable to change the base path.
+For example, set `BASE_PATH` to `api` will change the base path to `/api`.
 ```env
+BASE_PATH=api
+
+```
 
 
 ## Route strategy
