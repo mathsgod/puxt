@@ -266,7 +266,9 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
 
         //root index
         if ($fs->fileExists("index.php") || $fs->fileExists("index.html") || $fs->fileExists("index.twig")) {
-            $data[""] = $base_path . DIRECTORY_SEPARATOR . "index";
+            if ($this->base) {
+                $data[""] = $base_path . DIRECTORY_SEPARATOR . "index";
+            }
             $data["/"] = $base_path . DIRECTORY_SEPARATOR . "index";
         }
 
