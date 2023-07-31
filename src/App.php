@@ -2,6 +2,7 @@
 
 namespace PUXT;
 
+use Error;
 use Exception;
 use Laminas\Config\Config;
 use Laminas\Diactoros\Response\HtmlResponse;
@@ -176,7 +177,10 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
             return new HtmlResponse($e->getMessage(),  $e->getStatusCode());
         } catch (Exception $e) {
             return $this->generateResponseFromException($e);
+        } catch (Error $e) {
+            return new HtmlResponse($e->getMessage(), 500);
         }
+
 
         if (
             $request->getMethod() == "GET"
