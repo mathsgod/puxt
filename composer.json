@@ -25,7 +25,7 @@
         "laminas/laminas-httphandlerrunner": "^2.1",
         "psr/http-server-handler": "^1.0",
         "league/route": "^5.1",
-        "league/flysystem": "^2.3",
+        "league/flysystem": "^2.3 || ^3.0",
         "vlucas/phpdotenv": "^5.4",
         "league/event": "^3.0",
         "psr/log": "^1.0 || ^2.0 || ^3.0",
