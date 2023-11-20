@@ -205,7 +205,8 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $this->getServiceManager()->setService(ServerRequestInterface::class, $request);
+        $request = $request->withAttribute(ServiceManager::class, $this->serviceManager);
+        $this->serviceManager->setService(ServerRequestInterface::class, $request);
 
         //default handler
         return $this->handle($request);
