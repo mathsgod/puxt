@@ -20,6 +20,7 @@ use ReflectionMethod;
 use ReflectionObject;
 use Twig\TwigFunction;
 use \Psr\Http\Server\MiddlewareInterface;
+use ReflectionAttribute;
 use Twig\Environment;
 
 class PHPRequestHandler extends RequestHandler
@@ -62,6 +63,7 @@ class PHPRequestHandler extends RequestHandler
     {
         $this->service = $request->getAttribute(ServiceManager::class);
         $this->app = $this->service->get(App::class);
+
 
         $response = $this->handleRequest($request);
 
@@ -108,6 +110,9 @@ class PHPRequestHandler extends RequestHandler
             $verb = $request->getMethod();
 
             try {
+
+
+
                 ob_start();
                 $ret = $this->processVerb($verb, $request);
                 ob_get_contents();
@@ -127,7 +132,7 @@ class PHPRequestHandler extends RequestHandler
             }
 
             if (is_array($ret) || $ret instanceof JsonSerializable) {
-                
+
                 return new JsonResponse($ret, 200, [], JsonResponse::DEFAULT_JSON_FLAGS | JSON_UNESCAPED_UNICODE);
             }
 
@@ -151,27 +156,103 @@ class PHPRequestHandler extends RequestHandler
          * @var ContainerInterface
          */
         $container = $request->getAttribute(ServiceManager::class);
+        $app = $container->get(App::class);
+        assert($app instanceof App);
 
         $ref_obj = new ReflectionObject($this->stub);
         if ($ref_obj->hasMethod($verb)) {
 
-            $ref_method = $ref_obj->getMethod($verb);
+            $fallback_handler = new class($this->stub, $verb, $container) implements RequestHandlerInterface
+            {
+                private $object;
+                private $ref_method;
+                private $container;
 
-            $args = [];
+                public function __construct($object, string $method, ContainerInterface $container)
+                {
+                    $this->object = $object;
+                    $this->ref_method = new ReflectionMethod($object, $method);
+                    $this->container = $container;
+                }
 
-            foreach ($ref_method->getParameters() as $param) {
-                if ($type = $param->getType()) {
+                public function handle(ServerRequestInterface $request): ResponseInterface
+                {
 
-                    if ($container->has($type->getName())) {
-                        $args[] = $container->get($type->getName());
-                    } else {
-                        $args[] = null;
+                    $args = [];
+
+                    foreach ($this->ref_method->getParameters() as $param) {
+                        if ($type = $param->getType()) {
+
+                            if ($this->container->has($type->getName())) {
+                                $args[] = $this->container->get($type->getName());
+                            } else {
+                                $args[] = null;
+                            }
+                        } else {
+                            $args[] = null;
+                        }
                     }
-                } else {
-                    $args[] = null;
+
+                    $ret = $this->ref_method->invoke($this->object, ...$args);
+                    if ($ret instanceof ResponseInterface) {
+                        return $ret;
+                    }
+
+                    if (is_array($ret) || $ret instanceof JsonSerializable) {
+
+                        return new JsonResponse($ret, 200, [], JsonResponse::DEFAULT_JSON_FLAGS | JSON_UNESCAPED_UNICODE);
+                    }
+
+                    if (is_string($ret)) {
+                        return new TextResponse($ret);
+                    }
+
+                    if ($this->ref_method == "GET") {
+
+                        return new HtmlResponse($this->render($request));
+                    }
+
+                    return new EmptyResponse(200);
+                }
+            };
+
+            $request_handler = new class($fallback_handler) implements RequestHandlerInterface
+            {
+                private $middlewares = [];
+                private $fallback;
+
+                public function __construct(RequestHandlerInterface $fallback)
+                {
+                    $this->fallback = $fallback;
+                }
+
+
+                public function add(AttributeMiddlewareInterface $middleware, ReflectionAttribute $attribute)
+                {
+                    $this->middlewares[] = [$middleware, $attribute];
+                }
+
+                public function handle(ServerRequestInterface $request): ResponseInterface
+                {
+                    if (count($this->middlewares) == 0) {
+                        //fallback
+                        return $this->fallback->handle($request);
+                    }
+                    $middleware = array_shift($this->middlewares);
+                    return $middleware[0]->process($request, $this, $middleware[1]);
+                }
+            };
+
+
+            $ref_method = $ref_obj->getMethod($verb);
+            foreach ($ref_method->getAttributes() as $attribute) {
+                foreach ($app->getAttributeMiddlewares() as $middleware) {
+                    $request_handler->add($middleware, $attribute);
                 }
             }
-            return $ref_obj->getMethod($verb)->invoke($this->stub, ...$args);
+
+
+            return $request_handler->handle($request);
         }
     }
 
