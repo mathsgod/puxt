@@ -108,44 +108,7 @@ class PHPRequestHandler extends RequestHandler
 
             //--- method ---
             $verb = $request->getMethod();
-
-            try {
-
-
-
-                ob_start();
-                $ret = $this->processVerb($verb, $request);
-                ob_get_contents();
-                ob_end_clean();
-            } catch (HttpExceptionInterface $e) {
-                ob_get_contents();
-                ob_end_clean();
-                throw $e;
-            } catch (Exception $e) {
-                ob_get_contents();
-                ob_end_clean();
-                throw new Exception($e->getMessage(), $e->getCode());
-            }
-
-            if ($ret instanceof ResponseInterface) {
-                return $ret;
-            }
-
-            if (is_array($ret) || $ret instanceof JsonSerializable) {
-
-                return new JsonResponse($ret, 200, [], JsonResponse::DEFAULT_JSON_FLAGS | JSON_UNESCAPED_UNICODE);
-            }
-
-            if (is_string($ret)) {
-                return new TextResponse($ret);
-            }
-
-            if ($verb == "GET") {
-
-                return new HtmlResponse($this->render($request));
-            }
-
-            return new EmptyResponse(200);
+            return $this->processVerb($verb, $request);
         }
     }
 
@@ -162,16 +125,18 @@ class PHPRequestHandler extends RequestHandler
         $ref_obj = new ReflectionObject($this->stub);
         if ($ref_obj->hasMethod($verb)) {
 
-            $fallback_handler = new class($this->stub, $verb, $container) implements RequestHandlerInterface
+            $fallback_handler = new class($this, $this->stub, $verb, $container) implements RequestHandlerInterface
             {
+                private $php;
                 private $object;
                 private $ref_method;
                 private $container;
 
-                public function __construct($object, string $method, ContainerInterface $container)
+                public function __construct(PHPRequestHandler $php, $object, string $method, ContainerInterface $container)
                 {
+                    $this->php = $php;
                     $this->object = $object;
-                    $this->ref_method = new ReflectionMethod($object, $method);
+                    $this->ref_method = new ReflectionMethod($this->object, $method);
                     $this->container = $container;
                 }
 
@@ -193,7 +158,11 @@ class PHPRequestHandler extends RequestHandler
                         }
                     }
 
+                    ob_start();
                     $ret = $this->ref_method->invoke($this->object, ...$args);
+                    ob_get_contents();
+                    ob_end_clean();
+
                     if ($ret instanceof ResponseInterface) {
                         return $ret;
                     }
@@ -209,7 +178,7 @@ class PHPRequestHandler extends RequestHandler
 
                     if ($this->ref_method == "GET") {
 
-                        return new HtmlResponse($this->render($request));
+                        return new HtmlResponse($this->php->render($request));
                     }
 
                     return new EmptyResponse(200);
@@ -254,6 +223,8 @@ class PHPRequestHandler extends RequestHandler
 
             return $request_handler->handle($request);
         }
+
+        return new EmptyResponse(200);
     }
 
     public function processEntry(string $entry, ServerRequestInterface $request)
