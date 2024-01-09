@@ -47,7 +47,7 @@ $req = ServerRequestFactory::fromGlobals();
 $app = new App;
 $app->addAttributeMiddleware(new Middleware);
 
-$app->addParameterHandler(new InjectedUser);
+$app->addParameterHandler(Injector::class, new InjectedUser);
 
 
 /* $app->getServiceManager()->setService(Injector::class, function(){
