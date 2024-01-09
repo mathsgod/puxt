@@ -118,6 +118,7 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
             new SapiEmitter(),
             function () use ($serviceManager) {
                 $request = ServerRequestFactory::fromGlobals();
+                $request = $request->withAttribute(App::class, $this);
                 return $request->withAttribute(ServiceManager::class, $serviceManager);
             },
             function (Throwable $e) {
