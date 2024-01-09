@@ -125,13 +125,6 @@ class PHPRequestHandler extends RequestHandler
         $ref_obj = new ReflectionObject($this->stub);
 
         if ($ref_obj->hasMethod($verb)) {
-
-
-            $ref_method = $ref_obj->getMethod($verb);
-            $param = $ref_method->getParameters()[0];
-            $attribute = $param->getAttributes()[0];
-
-
             $fallback_handler = new class($this, $this->stub, $verb, $container, $app) implements RequestHandlerInterface
             {
                 private $php;
