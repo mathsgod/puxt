@@ -134,17 +134,15 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
 
     public function getParameterHandler(string $name): ?ParameterHandlerInterface
     {
-        foreach ($this->parameter_handlers as $handler) {
-            if ($handler::class == $name) {
-                return $handler;
-            }
+        if (isset($this->parameter_handlers[$name])) {
+            return $this->parameter_handlers[$name];
         }
         return null;
     }
 
-    public function addParameterHandler(ParameterHandlerInterface $handler)
+    public function addParameterHandler(string $name, ParameterHandlerInterface $handler)
     {
-        $this->parameter_handlers[] = $handler;
+        $this->parameter_handlers[$name] = $handler;
     }
 
     public function addAttributeMiddleware(AttributeMiddlewareInterface $middleware)

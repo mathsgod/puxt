@@ -21,6 +21,7 @@ use ReflectionObject;
 use Twig\TwigFunction;
 use \Psr\Http\Server\MiddlewareInterface;
 use ReflectionAttribute;
+use ReflectionNamedType;
 use Twig\Environment;
 
 class PHPRequestHandler extends RequestHandler
@@ -149,14 +150,20 @@ class PHPRequestHandler extends RequestHandler
 
                     foreach ($this->ref_method->getParameters() as $param) {
 
+
                         foreach ($param->getAttributes() as $attribute) {
-                            $args[] = $this->app->getParameterHandler($attribute->getName())->handle($request, $attribute, $param);
+                            if ($handler = $this->app->getParameterHandler($attribute->getName())) {
+                                $args[] = $handler->handle($request, $attribute, $param);
+                            } else {
+                                $args[] = null;
+                            }
+
                             continue 2;
                         }
 
                         if ($type = $param->getType()) {
 
-                            if ($this->container->has($type->getName())) {
+                            if (assert($type instanceof ReflectionNamedType) && $this->container->has($type->getName())) {
                                 $args[] = $this->container->get($type->getName());
                             } else {
                                 $args[] = null;
