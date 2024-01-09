@@ -123,21 +123,30 @@ class PHPRequestHandler extends RequestHandler
         assert($app instanceof App);
 
         $ref_obj = new ReflectionObject($this->stub);
+
         if ($ref_obj->hasMethod($verb)) {
 
-            $fallback_handler = new class($this, $this->stub, $verb, $container) implements RequestHandlerInterface
+
+            $ref_method = $ref_obj->getMethod($verb);
+            $param = $ref_method->getParameters()[0];
+            $attribute = $param->getAttributes()[0];
+
+
+            $fallback_handler = new class($this, $this->stub, $verb, $container, $app) implements RequestHandlerInterface
             {
                 private $php;
                 private $object;
                 private $ref_method;
                 private $container;
+                private $app;
 
-                public function __construct(PHPRequestHandler $php, $object, string $method, ContainerInterface $container)
+                public function __construct(PHPRequestHandler $php, $object, string $method, ContainerInterface $container, App $app)
                 {
                     $this->php = $php;
                     $this->object = $object;
                     $this->ref_method = new ReflectionMethod($this->object, $method);
                     $this->container = $container;
+                    $this->app = $app;
                 }
 
                 public function handle(ServerRequestInterface $request): ResponseInterface
@@ -146,6 +155,12 @@ class PHPRequestHandler extends RequestHandler
                     $args = [];
 
                     foreach ($this->ref_method->getParameters() as $param) {
+
+                        foreach ($param->getAttributes() as $attribute) {
+                            $args[] = $this->app->getParameterHandler($attribute->getName())->handle($request, $attribute, $param);
+                            continue 2;
+                        }
+
                         if ($type = $param->getType()) {
 
                             if ($this->container->has($type->getName())) {

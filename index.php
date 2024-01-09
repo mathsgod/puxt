@@ -1,5 +1,6 @@
 <?php
 
+use Laminas\Di\Injector;
 use Laminas\Diactoros\Response\HtmlResponse;
 use Laminas\Diactoros\ServerRequest;
 use Laminas\Diactoros\ServerRequestFactory;
@@ -17,17 +18,41 @@ class Middleware implements AttributeMiddlewareInterface
 {
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler, ReflectionAttribute $attribute): ResponseInterface
     {
-        if( $attribute->getName()=="Logged" )
-        {
-            return new HtmlResponse("test");
+        if ($attribute->getName() == "Logged") {
+            //            return new HtmlResponse("logged");
         }
-        die;
         return $handler->handle($request);
     }
 }
 
+class User
+{
+    public function getName()
+    {
+        return "Raymond";
+    }
+}
+class InjectedUser implements PUXT\ParameterHandlerInterface
+{
+    public function handle(ServerRequestInterface $request, ReflectionAttribute $attribute, ReflectionParameter $parameter): mixed
+    {
+        //if ($parameter->getType()->getName() == "InjectedUser") {
+        return new User;
+        //}
+    }
+}
 
 $req = ServerRequestFactory::fromGlobals();
+
 $app = new App;
 $app->addAttributeMiddleware(new Middleware);
+
+$app->addParameterHandler(new InjectedUser);
+
+
+/* $app->getServiceManager()->setService(Injector::class, function(){
+    return "abc";
+});
+ */
+
 $app->run();

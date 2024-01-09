@@ -65,6 +65,7 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
     protected $head = [];
 
     protected $attribute_middleware = [];
+    protected $parameter_handlers = [];
 
     static $instance;
 
@@ -129,6 +130,21 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
         if (substr($this->base, -1) == "/") {
             $this->base = substr($this->base, 0, -1);
         }
+    }
+
+    public function getParameterHandler(string $name): ?ParameterHandlerInterface
+    {
+        foreach ($this->parameter_handlers as $handler) {
+            if ($handler::class == $name) {
+                return $handler;
+            }
+        }
+        return null;
+    }
+
+    public function addParameterHandler(ParameterHandlerInterface $handler)
+    {
+        $this->parameter_handlers[] = $handler;
     }
 
     public function addAttributeMiddleware(AttributeMiddlewareInterface $middleware)
