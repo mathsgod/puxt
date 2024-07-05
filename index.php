@@ -45,14 +45,25 @@ class InjectedUser implements PUXT\ParameterHandlerInterface
 $req = ServerRequestFactory::fromGlobals();
 
 $app = new App;
-$app->addAttributeMiddleware(new Middleware);
+
+/* app->pipe(new class implements MiddlewareInterface
+{
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
+    {
+        return new HtmlResponse("Hello World3");
+    }
+});
+
+\ */
+
+
+/* $app->addAttributeMiddleware(new Middleware);
 
 $app->addParameterHandler(Injector::class, new InjectedUser);
-
+ */
 
 /* $app->getServiceManager()->setService(Injector::class, function(){
     return "abc";
 });
  */
-
 $app->run();
