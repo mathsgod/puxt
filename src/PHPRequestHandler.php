@@ -11,6 +11,7 @@ use Laminas\Diactoros\Response\JsonResponse;
 use Laminas\Diactoros\Response\TextResponse;
 use Laminas\ServiceManager\ServiceManager;
 use Laminas\Stdlib\RequestInterface;
+use Laminas\Stratigility\MiddlewarePipe;
 use League\Route\Http\Exception\HttpExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -33,10 +34,7 @@ class PHPRequestHandler extends RequestHandler
     private $app;
     private $service;
 
-    /**
-     *  @var MiddlewareInterface []
-     **/
-    public $middleware = [];
+    public $middleware;
 
     function __construct(string $file)
     {
@@ -49,12 +47,14 @@ class PHPRequestHandler extends RequestHandler
 
         $this->layout = $this->stub->layout ?? "default";
 
+        $this->middleware = new MiddlewarePipe();
+
         foreach ($this->stub->middleware ?? [] as $middleware) {
             $file = getcwd() . DIRECTORY_SEPARATOR . "middleware" . DIRECTORY_SEPARATOR . $middleware . ".php";
             if (file_exists($file)) {
                 $middleware = require($file);
                 if ($middleware instanceof MiddlewareInterface) {
-                    $this->middleware[] = $middleware;
+                    $this->middleware->pipe($middleware);
                 }
             }
         }
