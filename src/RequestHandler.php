@@ -19,12 +19,7 @@ abstract class RequestHandler implements RequestHandlerInterface
     public static function Create(string $file): RequestHandlerInterface
     {
         if (file_exists($file . ".php")) {
-            $php = new PHPRequestHandler($file . ".php");
-            $queue = new QueueRequestHandler($php);
-            foreach ($php->middleware as $middleware) {
-                $queue->add($middleware);
-            }
-            return $queue;
+            return new PHPRequestHandler($file . ".php");
         } elseif (file_exists($file . ".twig")) {
             return new TwigRequestHandler($file . ".twig");
         } elseif (file_exists($file . ".html")) {

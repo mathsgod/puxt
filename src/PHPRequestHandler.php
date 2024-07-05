@@ -25,7 +25,7 @@ use ReflectionAttribute;
 use ReflectionNamedType;
 use Twig\Environment;
 
-class PHPRequestHandler extends RequestHandler
+class PHPRequestHandler extends RequestHandler implements MiddlewareInterface
 {
     private $stub;
 
@@ -62,6 +62,13 @@ class PHPRequestHandler extends RequestHandler
 
     function handle(ServerRequestInterface $request): ResponseInterface
     {
+        $this->middleware->pipe($this);
+        return $this->middleware->handle($request);
+    }
+
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
+    {
+
         $this->service = $request->getAttribute(ServiceManager::class);
         $this->app = $this->service->get(App::class);
 
@@ -85,6 +92,7 @@ class PHPRequestHandler extends RequestHandler
 
     private function handleRequest(ServerRequestInterface $request): ResponseInterface
     {
+
         if ($this->stub instanceof RequestHandlerInterface) {
             $response = $this->stub->handle($request);
             //head
@@ -146,10 +154,10 @@ class PHPRequestHandler extends RequestHandler
                 public function handle(ServerRequestInterface $request): ResponseInterface
                 {
 
+
                     $args = [];
 
                     foreach ($this->ref_method->getParameters() as $param) {
-
 
                         foreach ($param->getAttributes() as $attribute) {
                             if ($handler = $this->app->getParameterHandler($attribute->getName())) {
@@ -162,6 +170,11 @@ class PHPRequestHandler extends RequestHandler
                         }
 
                         if ($type = $param->getType()) {
+
+                            if ($type->getName() == "Psr\Http\Message\ServerRequestInterface") {
+                                $args[] = $request;
+                                continue;
+                            }
 
                             if (assert($type instanceof ReflectionNamedType) && $this->container->has($type->getName())) {
                                 $args[] = $this->container->get($type->getName());
