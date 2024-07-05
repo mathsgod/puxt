@@ -171,7 +171,7 @@ class PHPRequestHandler extends RequestHandler implements MiddlewareInterface
 
                         if ($type = $param->getType()) {
 
-                            if ($type->getName() == "Psr\Http\Message\ServerRequestInterface") {
+                            if ($type->getName() == ServerRequestInterface::class) {
                                 $args[] = $request;
                                 continue;
                             }
