@@ -194,6 +194,15 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
 
     function handle(ServerRequestInterface $request): ResponseInterface
     {
+        $this->middleware->pipe($this);
+        return $this->middleware->handle($request);
+    }
+
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
+    {
+        $request = $request->withAttribute(ServiceManager::class, $this->serviceManager);
+        $this->serviceManager->setService(ServerRequestInterface::class, $request);
+
         //load default router
         $router = $this->getRouter();
 
@@ -226,16 +235,6 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
         }
 
         return $response;
-    }
-
-
-    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
-    {
-        $request = $request->withAttribute(ServiceManager::class, $this->serviceManager);
-        $this->serviceManager->setService(ServerRequestInterface::class, $request);
-
-        //default handler
-        return $this->handle($request);
     }
 
     private function getRouter(): Router
