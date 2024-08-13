@@ -128,7 +128,7 @@ class App implements EventDispatcherAware, LoggerAwareInterface, RequestHandlerR
 
         $this->base = $_ENV["BASE_PATH"];
         //if base path is end with "/", remove it
-        if (substr($this->base, -1) == "/") {
+        if (substr($this->base ?? "", -1) == "/") {
             $this->base = substr($this->base, 0, -1);
         }
     }
