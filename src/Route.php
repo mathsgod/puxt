@@ -6,4 +6,5 @@ class Route
 {
     public $path;
     public $params;
+    public $query;
 }

@@ -5,7 +5,6 @@ namespace PUXT;
 use Closure;
 use Composer\Autoload\ClassLoader;
 use Exception;
-use Laminas\Config\Config;
 use Laminas\Diactoros\Response\EmptyResponse;
 use Laminas\Diactoros\Response\JsonResponse;
 use Laminas\Diactoros\ServerRequestFactory;
@@ -375,28 +374,28 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
     private function generateHeader(array $head)
     {
         $html = [];
-        if ($head["base"]) {
+        if (!empty($head["base"])) {
             $html[] = (string)html("base")->attr($head["base"]);
         }
 
-        if ($head["title"]) {
+        if (!empty($head["title"])) {
             $html[] = "<title>" . htmlentities($head['title']) . "</title>";
         }
 
-        if (is_array($head["meta"])) {
+        if (is_array($head["meta"] ?? null)) {
             foreach ($head["meta"] as $meta) {
                 $html[] = (string)html("meta")->attr($meta);
             }
         }
 
-        if (is_array($head["link"])) {
+        if (is_array($head["link"] ?? null)) {
             foreach ($head["link"] as $link) {
                 $html[] = (string)html("link")->attr($link);
             }
         }
 
 
-        if (is_array($head["script"])) {
+        if (is_array($head["script"] ?? null)) {
             foreach ($head["script"] as $script) {
                 $html[] = (string)html("script")->attr($script);
             }
@@ -424,7 +423,7 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
 
     public function callHook(string $name, $args)
     {
-        if ($this->_hooks[$name]) {
+        if (!empty($this->_hooks[$name])) {
             foreach ($this->_hooks[$name] as $hook) {
                 $hook($args);
             }
@@ -436,7 +435,7 @@ class App implements RequestHandlerInterface, EventDispatcherAware, LoggerAwareI
         $this->_hooks[$name][] = $fn;
     }
 
-    public function getTwig(LoaderInterface $loader = null)
+    public function getTwig(?LoaderInterface $loader = null)
     {
         if (!$loader) {
             $loader = new \Twig\Loader\FilesystemLoader($this->root);

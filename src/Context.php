@@ -7,6 +7,7 @@ use Exception;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
+#[\AllowDynamicProperties]
 class Context
 {
     public $config;

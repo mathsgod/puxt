@@ -29,6 +29,10 @@ class PHPRequestHandler extends RequestHandler
 {
     private $stub;
     private $context;
+    public $twig_content;
+    public $layout;
+    public $request;
+    public $twig;
 
     /**
      *  @var MiddlewareInterface []
@@ -103,7 +107,7 @@ class PHPRequestHandler extends RequestHandler
 
             //--- entry ---
             $params = $request->getQueryParams();
-            if ($entry = $params["_entry"]) {
+            if ($entry = $params["_entry"] ?? null) {
                 $ret = $this->processEntry($entry, $request);
                 if ($ret instanceof ResponseInterface) {
                     return $ret;
